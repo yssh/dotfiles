@@ -17,7 +17,7 @@ setopt auto_cd                                           # ディレクトリ名
 setopt auto_pushd                                        # 自動でpush
 setopt pushd_ignore_dups                                 # ディレクトリスタックに重複するものは古い方を削除
 setopt print_eight_bit                                   # 補完候補リストの日本語を適正表示
-setopt correct                                           # コマンドのスペル訂正
+# setopt correct                                           # コマンドのスペル訂正
 
 ### Complement ###
 fpath=(/usr/local/share/zsh-completions $fpath)
@@ -115,7 +115,7 @@ fi
 
 # pyenv
 if which pyenv > /dev/null; then
-    eval "$(pyenv init -)";
+    eval "$(pyenv init -)"
 fi
 
 # virtualenvwrapper
@@ -125,5 +125,10 @@ fi
 
 # nodenv
 if which nodenv > /dev/null; then
-    eval "$(nodenv init -)";
+    eval "$(nodenv init -)"
+fi
+
+# direnv
+if which direnv > /dev/null; then
+    eval "$(direnv hook zsh)"
 fi
