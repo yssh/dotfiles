@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: specify { expect(...).to ... }
+# key: spec
+# binding: direct-keybinding
+# --
+specify { expect($1).to $0 }

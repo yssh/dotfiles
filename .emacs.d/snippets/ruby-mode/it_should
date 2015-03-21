@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: it { should ... }
+# key: its
+# binding: direct-keybinding
+# --
+it { should $0 }

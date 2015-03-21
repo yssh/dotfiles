@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: <div> ... </div>
+# key: div
+# binding: direct-keybinding
+# --
+<div${1: class="$2"}>
+  $0
+</div>

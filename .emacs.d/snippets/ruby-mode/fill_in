@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: fill_in "...", with: ...
+# key: fill
+# binding: direct-keybinding
+# --
+fill_in "$1", with: $0

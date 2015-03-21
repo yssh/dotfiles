@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: before { ... }
+# key: bef
+# binding: direct-keybinding
+# --
+before { $0 }

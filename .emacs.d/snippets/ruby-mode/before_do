@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: before do ... end
+# key: befd
+# binding: direct-keybinding
+# --
+before${1:(:each)} do
+  $0
+end
