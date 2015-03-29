@@ -91,8 +91,6 @@
 (define-key global-map (kbd "C->") 'end-of-buffer)
 ;; 最小化を無効
 (define-key global-map (kbd "C-z") nil)
-;; C-@によるマークセットを無効
-(define-key global-map (kbd "C-@") 'keyboard-quit)
 
 ;; ウインドウ切り替え
 (defun other-window-or-split (val)
@@ -202,8 +200,8 @@
   (add-to-list 'default-frame-alist '(font . "ricty-12")))
 
 ;; ウインドウの透明度設定
-(when (eq window-system 'ns)
-  (set-frame-parameter (selected-frame) 'alpha '(0.85 0.80)))
+;; (when (eq window-system 'ns)
+;;   (set-frame-parameter (selected-frame) 'alpha '(0.85 0.80)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -526,6 +524,22 @@
                               (?\' . ?\')
                               (?\{ . ?\})
                               )))
+
+;; region-bindings-mode
+(when (require 'region-bindings-mode nil t)
+  (region-bindings-mode-enable))
+
+;; expand-region
+(when (require 'expand-region nil t)
+  (global-set-key (kbd "C-@") 'er/expand-region)
+  (global-set-key (kbd "C-M-@") 'er/contract-region))
+
+;; multiple-cursor
+(when (require 'multiple-cursors nil t)
+  (define-key region-bindings-mode-map (kbd "a") 'mc/mark-all-like-this)
+  (define-key region-bindings-mode-map (kbd "p") 'mc/mark-previous-like-this)
+  (define-key region-bindings-mode-map (kbd "n") 'mc/mark-next-like-this)
+  (define-key region-bindings-mode-map (kbd "m") 'mc/mark-more-like-this-extended))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
