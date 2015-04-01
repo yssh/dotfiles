@@ -103,7 +103,8 @@ case ${OSTYPE} in
     darwin*)
         # Aliases
         alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs"
-        ;;
+        alias vim="/usr/local/bin/vim"
+		;;
     linux*)
         ;;
 esac
