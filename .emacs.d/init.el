@@ -297,7 +297,7 @@
 ;; color-moccur
 (when (require 'color-moccur nil t)
   ;; キーバインド
-  (define-key global-map (kbd "M-o") 'occur-by-moccur)
+  (define-key global-map (kbd "C-o") 'occur-by-moccur)
   (define-key global-map (kbd "C-M-o") 'moccur)
   ;; スペース区切りでAND検索
   (setq moccur-split-word t))
@@ -322,6 +322,9 @@
     (autoload 'wgrep-ag-setup "wgrep-ag")
     (add-hook 'ag-mode-hook 'wgrep-ag-setup)
     (define-key ag-mode-map (kbd "r") 'wgrep-change-to-wgrep-mode)))
+
+;; all-ext
+(when (require 'all-ext nil t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -412,6 +415,7 @@
   (setq popwin:popup-window-position 'bottom)
   (setq popwin:popup-window-height 0.5)
   (push '("*Moccur*") popwin:special-display-config)
+  (push '("*All*") popwin:special-display-config)
   (push '("\\*ag " :regexp t) popwin:special-display-config)
   (push '("\\*magit " :regexp t) popwin:special-display-config)
   (define-key global-map (kbd "C-x p") 'popwin:display-last-buffer))
@@ -465,6 +469,11 @@
    '(helm-skip-boring-files t))
 
   ;; occur/moccur
+  (eval-after-load "helm-regexp"
+    #'(progn
+        (define-key global-map (kbd "C-x C-o") 'helm-occur)
+        (define-key isearch-mode-map (kbd "C-o") #'helm-occur-from-isearch)))
+
   (defun helm-moccur ()
     (interactive)
     (let ((buffers (moccur-filter-buffers (buffer-list))))
@@ -472,19 +481,8 @@
       (setq buffers (sort buffers moccur-buffer-sort-method))
       (helm-multi-occur buffers)))
 
-  (eval-after-load "helm-regexp"
-    #'(progn
-        (define-key global-map (kbd "C-x C-o") 'helm-occur)
-        (define-key isearch-mode-map (kbd "C-o") #'helm-occur-from-isearch)))
-
-  (defun moccur-from-helm-moccur (arg)
-    (interactive "P")
-    (let ((f (if (string-equal "Occur" (helm-attr 'name))
-                 #'occur-by-moccur #'moccur)))
-      (helm-run-after-quit f helm-input arg)))
-
-  (define-key helm-moccur-map (kbd "C-s") #'moccur-from-helm-moccur)
-  (define-key global-map (kbd "C-x C-M-o") #'helm-moccur))
+  (define-key global-map (kbd "C-x C-M-o") #'helm-moccur)
+  (define-key helm-map (kbd "C-c C-a") 'all-from-helm-occur))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -882,7 +880,8 @@
 ;; magit
 (when (require 'magit nil t)
   (define-key global-map (kbd "C-x m") 'magit-status)
-  (magit-auto-revert-mode -1))
+  (setq magit-auto-revert-mode nil)
+  (setq magit-last-seen-setup-instructions "1.4.0"))
 
 ;; helm-ls-git
 (when (require 'helm-ls-git nil t)
@@ -909,10 +908,20 @@
 (when (require 'multi-term nil t)
   ;; 使用するシェルを指定
   (when (eq system-type 'darwin)
-    (setq multi-term-program "/usr/local/bin/zsh"))
+    (setq multi-term-program "/usr/local/bin/zsh")
+    (setenv "TERMINFO" "~/.terminfo"))
 
   (when (eq system-type 'gnu/linux)
-    (setq multi-term-program "/bin/bash")))
+    (setq multi-term-program "/bin/bash"))
+
+  (define-key global-map (kbd "C-M-m") 'multi-term)
+
+  (add-hook 'term-mode-hook
+            '(lambda ()
+               (setq show-trailing-whitespace nil)
+               (define-key term-raw-map (kbd "C-y") 'term-paste)
+               (define-key term-raw-map (kbd "C-t")
+                 (lookup-key (current-global-map) (kbd "C-t"))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
