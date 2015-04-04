@@ -307,7 +307,8 @@
 
 ;; wgrep
 (when (require 'wgrep nil t)
-  (setq wgrep-enable-key "r"))
+  ;; (setq wgrep-enable-key (kbd "C-c C-e"))
+  (setq wgrep-auto-save-buffer t))
 
 ;; ag
 (when (require 'ag nil t)
@@ -321,7 +322,7 @@
   (when (require 'wgrep-ag nil t)
     (autoload 'wgrep-ag-setup "wgrep-ag")
     (add-hook 'ag-mode-hook 'wgrep-ag-setup)
-    (define-key ag-mode-map (kbd "r") 'wgrep-change-to-wgrep-mode)))
+    (define-key ag-mode-map (kbd "C-c C-e") 'wgrep-change-to-wgrep-mode)))
 
 ;; all-ext
 (when (require 'all-ext nil t))
@@ -350,7 +351,7 @@
 ;; recentf
 (require 'recentf)
 (setq recentf-save-file "~/.emacs.d/.recentf")
-(setq recentf-max-saved-items 100)
+(setq recentf-max-saved-items 500)
 (setq-default find-file-visit-truename t)
 (recentf-mode t)
 
@@ -370,7 +371,7 @@
 
 ;; wdired
 (require 'wdired)
-(define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
+(define-key dired-mode-map (kbd "C-c C-e") 'wdired-change-to-wdired-mode)
 (setq wdired-allow-to-change-permissions t)
 
 
@@ -414,8 +415,10 @@
   (setq display-buffer-function 'popwin:display-buffer)
   (setq popwin:popup-window-position 'bottom)
   (setq popwin:popup-window-height 0.5)
+  (push '("*Occur*") popwin:special-display-config)
   (push '("*Moccur*") popwin:special-display-config)
   (push '("*All*") popwin:special-display-config)
+  (push '("*Compile-Log*") popwin:special-display-config)
   (push '("\\*ag " :regexp t) popwin:special-display-config)
   (push '("\\*magit " :regexp t) popwin:special-display-config)
   (define-key global-map (kbd "C-x p") 'popwin:display-last-buffer))
@@ -467,6 +470,9 @@
    '(helm-boring-file-regexp-list '("\\.elc$"))
    '(helm-skip-boring-buffers t)
    '(helm-skip-boring-files t))
+
+  ;; バッファ名を表示する幅を調整
+  (setq helm-buffer-max-length 50)
 
   ;; occur/moccur
   (eval-after-load "helm-regexp"
@@ -532,7 +538,7 @@
   (global-set-key (kbd "C-@") 'er/expand-region)
   (global-set-key (kbd "C-M-@") 'er/contract-region))
 
-;; multiple-cursor
+;; multiple-cursors
 (when (require 'multiple-cursors nil t)
   (define-key region-bindings-mode-map (kbd "a") 'mc/mark-all-like-this)
   (define-key region-bindings-mode-map (kbd "p") 'mc/mark-previous-like-this)
