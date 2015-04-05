@@ -292,6 +292,100 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Helm
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (require 'helm-config nil t)
+  (helm-mode t)
+
+  ;; 色の変更
+  (custom-set-faces
+   '(helm-selection ((t (:background "#6495ED")))))
+
+  ;; キーバインド
+  (define-key global-map (kbd "M-x")     'helm-M-x)
+  (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
+  (define-key global-map (kbd "C-x C-b") 'helm-buffers-list)
+  (define-key global-map (kbd "C-x C-i") 'helm-imenu)
+  (define-key global-map (kbd "C-x C-u") 'helm-recentf)
+
+  (define-key helm-map (kbd "C-h") 'delete-backward-char)
+  (define-key helm-map (kbd "C-w") 'backward-kill-word)
+  (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+
+  ;; kill-bufferでのhelmを抑制
+  (add-to-list 'helm-completing-read-handlers-alist '(kill-buffer . nil))
+
+  ;; ミニバッファでのC-kで現在位置から削除
+  (setq helm-delete-minibuffer-contents-from-point t)
+  (defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
+    "Emulate `kill-line' in helm minibuffer"
+    (kill-new (buffer-substring (point) (field-end))))
+
+  ;; TABによる新規バッファ作成の抑制
+  (defadvice helm-ff-kill-or-find-buffer-fname (around execute-only-if-exist activate)
+    "Execute command only if CANDIDATE exists"
+    (when (file-exists-p candidate)
+      ad-do-it))
+
+  ;; 自動補完を無効化
+  (setq helm-ff-auto-update-initial-value nil)
+
+  ;; バッファリストの設定
+  (custom-set-variables
+   '(helm-truncate-lines t)
+   '(helm-boring-buffer-regexp-list '("^*"))
+   '(helm-boring-file-regexp-list '("\\.elc$"))
+   '(helm-skip-boring-buffers t)
+   '(helm-skip-boring-files t))
+
+  ;; バッファ名を表示する幅を調整
+  (setq helm-buffer-max-length 50)
+
+  ;; occur/moccur
+  (eval-after-load "helm-regexp"
+    #'(progn
+        (define-key global-map (kbd "C-x C-o") 'helm-occur)
+        (define-key isearch-mode-map (kbd "C-o") #'helm-occur-from-isearch)))
+
+  (defun helm-moccur ()
+    (interactive)
+    (let ((buffers (moccur-filter-buffers (buffer-list))))
+      ;; sort
+      (setq buffers (sort buffers moccur-buffer-sort-method))
+      (helm-multi-occur buffers)))
+
+  (define-key global-map (kbd "C-x C-M-o") #'helm-moccur)
+
+  (defun moccur-from-helm-moccur (arg)
+    (interactive "P")
+    (let ((f (if (string-equal "Occur" (helm-attr 'name))
+                 #'occur-by-moccur #'moccur)))
+      (helm-run-after-quit f helm-input arg)))
+
+  (define-key helm-moccur-map (kbd "C-c C-p") #'moccur-from-helm-moccur)
+
+  ;; swoop
+  (when (require 'helm-swoop nil t)
+    (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+    (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+
+    (define-key helm-swoop-map (kbd "C-c C-p") 'helm-swoop-edit)
+    (define-key helm-swoop-edit-map (kbd "C-c C-c") 'helm-swoop--edit-complete)
+    (define-key helm-swoop-edit-map (kbd "C-c C-k") 'helm-swoop--edit-cancel)
+
+    (define-key helm-multi-swoop-map (kbd "C-c C-p") 'helm-multi-swoop-edit)
+    (define-key helm-multi-swoop-edit-map (kbd "C-c C-c") 'helm-multi-swoop--edit-complete)
+    (define-key helm-multi-swoop-edit-map (kbd "C-c C-k") 'helm-multi-swoop--edit-cancel)
+
+    (setq helm-multi-swoop-edit-save t)
+    (setq helm-swoop-split-with-multiple-windows t)
+    (setq helm-swoop-move-to-line-cycle nil)
+
+    ;; ace-isearch
+    (global-ace-isearch-mode t)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 検索と置換
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; color-moccur
@@ -312,6 +406,7 @@
 
 ;; wgrep
 (when (require 'wgrep nil t)
+  (setq wgrep-enable-key (kbd "C-c C-p"))
   (setq wgrep-auto-save-buffer t))
 
 ;; ag
@@ -437,95 +532,13 @@
   (push '("*Moccur*") popwin:special-display-config)
   (push '("*All*") popwin:special-display-config)
   (push '("*Compile-Log*") popwin:special-display-config)
+  (push '("\\*Helm " :reqexp t) popwin:special-display-config)
   (push '("\\*ag " :regexp t) popwin:special-display-config)
   (push '("\\*magit " :regexp t) popwin:special-display-config)
   (push '(direx:direx-mode :position left :width 30 :dedicated t)
         popwin:special-display-config)
+  (push '(" *undo-tree*" :width 0.3 :position right) popwin:special-display-config)
   (define-key global-map (kbd "C-x p") 'popwin:display-last-buffer))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helm
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'helm-config nil t)
-  (helm-mode t)
-
-  ;; 色の変更
-  (custom-set-faces
-   '(helm-selection ((t (:background "#6495ED")))))
-
-  ;; キーバインド
-  (define-key global-map (kbd "M-x")     'helm-M-x)
-  (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
-  (define-key global-map (kbd "C-x C-b") 'helm-buffers-list)
-  (define-key global-map (kbd "C-x C-i") 'helm-imenu)
-  (define-key global-map (kbd "C-x C-u") 'helm-recentf)
-
-  (define-key helm-map (kbd "C-h") 'delete-backward-char)
-  (define-key helm-map (kbd "C-w") 'backward-kill-word)
-  (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
-
-  ;; kill-bufferでのhelmを抑制
-  (add-to-list 'helm-completing-read-handlers-alist '(kill-buffer . nil))
-
-  ;; ミニバッファでのC-kで現在位置から削除
-  (setq helm-delete-minibuffer-contents-from-point t)
-  (defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
-    "Emulate `kill-line' in helm minibuffer"
-    (kill-new (buffer-substring (point) (field-end))))
-
-  ;; TABによる新規バッファ作成の抑制
-  (defadvice helm-ff-kill-or-find-buffer-fname (around execute-only-if-exist activate)
-    "Execute command only if CANDIDATE exists"
-    (when (file-exists-p candidate)
-      ad-do-it))
-
-  ;; 自動補完を無効化
-  (setq helm-ff-auto-update-initial-value nil)
-
-  ;; バッファリストの設定
-  (custom-set-variables
-   '(helm-truncate-lines t)
-   '(helm-boring-buffer-regexp-list '("^*"))
-   '(helm-boring-file-regexp-list '("\\.elc$"))
-   '(helm-skip-boring-buffers t)
-   '(helm-skip-boring-files t))
-
-  ;; バッファ名を表示する幅を調整
-  (setq helm-buffer-max-length 50)
-
-  ;; occur/moccur
-  (eval-after-load "helm-regexp"
-    #'(progn
-        (define-key global-map (kbd "C-x C-o") 'helm-occur)
-        (define-key isearch-mode-map (kbd "C-o") #'helm-occur-from-isearch)))
-
-  (defun helm-moccur ()
-    (interactive)
-    (let ((buffers (moccur-filter-buffers (buffer-list))))
-      ;; sort
-      (setq buffers (sort buffers moccur-buffer-sort-method))
-      (helm-multi-occur buffers)))
-
-  (define-key global-map (kbd "C-x C-M-o") #'helm-moccur)
-
-  (defun moccur-from-helm-moccur (arg)
-    (interactive "P")
-    (let ((f (if (string-equal "Occur" (helm-attr 'name))
-                 #'occur-by-moccur #'moccur)))
-      (helm-run-after-quit f helm-input arg)))
-
-  (define-key helm-moccur-map (kbd "C-c C-p") #'moccur-from-helm-moccur)
-
-  ;; swoop
-  (when (require 'helm-swoop nil t)
-    (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
-    (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
-
-    (setq helm-swoop-move-to-line-cycle nil)
-
-    ;; ace-isearch
-    (global-ace-isearch-mode t)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
