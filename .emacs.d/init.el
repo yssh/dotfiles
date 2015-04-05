@@ -300,32 +300,32 @@
   (define-key global-map (kbd "C-o") 'occur-by-moccur)
   (define-key global-map (kbd "C-M-o") 'moccur)
   ;; スペース区切りでAND検索
-  (setq moccur-split-word t))
+  (setq moccur-split-word t)
+  ;; 除外するバッファ名
+  (custom-set-variables
+   '(*moccur-buffer-name-exclusion-list*
+     '("TAGS" "^*.*" "^[ ].+"))))
 
 ;; moccur-edit
-(require 'moccur-edit nil t)
+(when (require 'moccur-edit nil t)
+  (define-key moccur-mode-map (kbd "C-c C-p") 'moccur-edit-mode-in))
 
 ;; wgrep
 (when (require 'wgrep nil t)
-  ;; (setq wgrep-enable-key (kbd "C-c C-e"))
   (setq wgrep-auto-save-buffer t))
 
 ;; ag
 (when (require 'ag nil t)
   (custom-set-variables
    '(ag-highlight-search t)  ; 検索結果の中の検索語をハイライトする
-   '(ag-reuse-window 'nil)   ; 現在のウィンドウを検索結果表示に使う
-   '(ag-reuse-buffers 'nil)) ; 現在のバッファを検索結果表示に使う
+   '(ag-reuse-window 'nil)   ; 現在のウィンドウを検索結果表示に使わない
+   '(ag-reuse-buffers 'nil)) ; 現在のバッファを検索結果表示に使わない
 
   (define-key global-map (kbd "C-x C-a") 'ag)
 
   (when (require 'wgrep-ag nil t)
     (autoload 'wgrep-ag-setup "wgrep-ag")
-    (add-hook 'ag-mode-hook 'wgrep-ag-setup)
-    (define-key ag-mode-map (kbd "C-c C-e") 'wgrep-change-to-wgrep-mode)))
-
-;; all-ext
-(when (require 'all-ext nil t))
+    (add-hook 'ag-mode-hook 'wgrep-ag-setup)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -371,7 +371,7 @@
 
 ;; wdired
 (require 'wdired)
-(define-key dired-mode-map (kbd "C-c C-e") 'wdired-change-to-wdired-mode)
+(define-key dired-mode-map (kbd "C-c C-p") 'wdired-change-to-wdired-mode)
 (setq wdired-allow-to-change-permissions t)
 
 
@@ -488,7 +488,14 @@
       (helm-multi-occur buffers)))
 
   (define-key global-map (kbd "C-x C-M-o") #'helm-moccur)
-  (define-key helm-map (kbd "C-c C-a") 'all-from-helm-occur))
+
+  (defun moccur-from-helm-moccur (arg)
+    (interactive "P")
+    (let ((f (if (string-equal "Occur" (helm-attr 'name))
+                 #'occur-by-moccur #'moccur)))
+      (helm-run-after-quit f helm-input arg)))
+
+  (define-key helm-moccur-map (kbd "C-c C-p") #'moccur-from-helm-moccur))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
