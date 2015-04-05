@@ -374,6 +374,15 @@
 (define-key dired-mode-map (kbd "C-c C-p") 'wdired-change-to-wdired-mode)
 (setq wdired-allow-to-change-permissions t)
 
+;; direx
+(when (require 'direx nil t)
+  (setq direx:leaf-icon "  "
+        direx:open-icon "▾ "
+        direx:closed-icon "▸ ")
+  (define-key global-map (kbd "C-x C-j") 'direx:jump-to-directory-other-window)
+  (define-key global-map (kbd "C-x C-M-j") 'direx:find-directory-other-window)
+  (define-key global-map (kbd "C-x M-j") 'direx-project:jump-to-project-root-other-window))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ウィンドウ管理
@@ -421,6 +430,8 @@
   (push '("*Compile-Log*") popwin:special-display-config)
   (push '("\\*ag " :regexp t) popwin:special-display-config)
   (push '("\\*magit " :regexp t) popwin:special-display-config)
+  (push '(direx:direx-mode :position left :width 30 :dedicated t)
+        popwin:special-display-config)
   (define-key global-map (kbd "C-x p") 'popwin:display-last-buffer))
 
 
