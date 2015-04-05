@@ -327,6 +327,15 @@
     (autoload 'wgrep-ag-setup "wgrep-ag")
     (add-hook 'ag-mode-hook 'wgrep-ag-setup)))
 
+;; anzu
+(when (require 'anzu nil t)
+  (global-anzu-mode +1)
+
+  (custom-set-variables
+   '(anzu-mode-lighter "")
+   '(anzu-deactivate-region t)
+   '(anzu-search-threshold 1000)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 履歴管理
@@ -506,7 +515,17 @@
                  #'occur-by-moccur #'moccur)))
       (helm-run-after-quit f helm-input arg)))
 
-  (define-key helm-moccur-map (kbd "C-c C-p") #'moccur-from-helm-moccur))
+  (define-key helm-moccur-map (kbd "C-c C-p") #'moccur-from-helm-moccur)
+
+  ;; swoop
+  (when (require 'helm-swoop nil t)
+    (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+    (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+
+    (setq helm-swoop-move-to-line-cycle nil)
+
+    ;; ace-isearch
+    (global-ace-isearch-mode t)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
