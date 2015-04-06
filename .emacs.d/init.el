@@ -85,10 +85,6 @@
 (define-key global-map (kbd "C-h") 'delete-backward-char)
 ;; ヘルプ
 (define-key global-map (kbd "M-?") 'help-for-help)
-;; バッファ先頭への移動
-(define-key global-map (kbd "C-<") 'beginning-of-buffer)
-;; バッファ終端への移動
-(define-key global-map (kbd "C->") 'end-of-buffer)
 ;; 最小化を無効
 (define-key global-map (kbd "C-z") nil)
 
@@ -366,6 +362,8 @@
 
   ;; swoop
   (when (require 'helm-swoop nil t)
+    (define-key global-map (kbd "C-x C-p") 'helm-swoop)
+
     (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
     (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
 
@@ -382,7 +380,8 @@
     (setq helm-swoop-move-to-line-cycle nil)
 
     ;; ace-isearch
-    (global-ace-isearch-mode t)))
+    ;; (global-ace-isearch-mode t)
+    ))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -590,6 +589,9 @@
 
 ;; multiple-cursors
 (when (require 'multiple-cursors nil t)
+  (define-key global-map (kbd "C-<") 'mc/mark-previous-like-this)
+  (define-key global-map (kbd "C->") 'mc/mark-next-like-this)
+
   (define-key region-bindings-mode-map (kbd "a") 'mc/mark-all-like-this)
   (define-key region-bindings-mode-map (kbd "p") 'mc/mark-previous-like-this)
   (define-key region-bindings-mode-map (kbd "n") 'mc/mark-next-like-this)
