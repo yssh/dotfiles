@@ -43,10 +43,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; package.el
 (when (require 'package nil t)
-  ;; パッケージリポジトリにMarmaladeと開発者運営のELPAを追加
+  ;; パッケージリポジトリにmeplaとmarmaladeを追加
   (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
   (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-  (add-to-list 'package-archives '("ELPA" . "http://tromey.com/elpa/"))
   ;; インストールしたパッケージにロードパスを通して読み込む
   (package-initialize))
 
@@ -60,6 +59,9 @@
   ;; (setq url-proxy-services '(("http" . "localhost:8339")))
   ;; install-elisp の関数を利用可能にする
   (auto-install-compatibility-setup))
+
+;; 新しいパッケージを読み込み
+(setq load-prefer-newer t)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -527,11 +529,10 @@
   (setq display-buffer-function 'popwin:display-buffer)
   (setq popwin:popup-window-position 'bottom)
   (setq popwin:popup-window-height 0.5)
-  (push '("*Occur*") popwin:special-display-config)
   (push '("*Moccur*") popwin:special-display-config)
   (push '("*All*") popwin:special-display-config)
   (push '("*Compile-Log*") popwin:special-display-config)
-  (push '("\\*Helm " :reqexp t) popwin:special-display-config)
+  (push '("\\*Helm " :regexp t) popwin:special-display-config)
   (push '("\\*ag " :regexp t) popwin:special-display-config)
   (push '("\\*magit " :regexp t) popwin:special-display-config)
   (push '(direx:direx-mode :position left :width 30 :dedicated t)
