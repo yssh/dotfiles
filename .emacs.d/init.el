@@ -593,10 +593,10 @@
   (define-key global-map (kbd "C-<") 'mc/mark-previous-like-this)
   (define-key global-map (kbd "C->") 'mc/mark-next-like-this)
 
-  (define-key region-bindings-mode-map (kbd "a") 'mc/mark-all-like-this)
-  (define-key region-bindings-mode-map (kbd "p") 'mc/mark-previous-like-this)
-  (define-key region-bindings-mode-map (kbd "n") 'mc/mark-next-like-this)
-  (define-key region-bindings-mode-map (kbd "m") 'mc/mark-more-like-this-extended))
+  (define-key region-bindings-mode-map (kbd "C-a") 'mc/mark-all-like-this)
+  (define-key region-bindings-mode-map (kbd "C-p") 'mc/mark-previous-like-this)
+  (define-key region-bindings-mode-map (kbd "C-n") 'mc/mark-next-like-this)
+  (define-key region-bindings-mode-map (kbd "C-m") 'mc/mark-more-like-this-extended))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
