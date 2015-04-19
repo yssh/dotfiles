@@ -198,8 +198,8 @@
   (add-to-list 'default-frame-alist '(font . "ricty-12")))
 
 ;; ウインドウの透明度設定
-;; (when (eq window-system 'ns)
-;;   (set-frame-parameter (selected-frame) 'alpha '(0.85 0.80)))
+(when (eq window-system 'ns)
+  (set-frame-parameter (selected-frame) 'alpha '(0.85 0.80)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -244,6 +244,17 @@
 ;; volatile-highlights
 (when (require 'volatile-highlights nil t)
   (volatile-highlights-mode t))
+
+;; auto-highlight-symbol
+(when (require 'auto-highlight-symbol nil t)
+  (global-auto-highlight-symbol-mode t))
+
+;; highlight-symbol
+(when (require 'highlight-symbol nil t)
+  (setq highlight-symbol-colors '("DarkOrange" "DodgerBlue1" "DeepPink1"))
+
+  (define-key global-map (kbd "<f3>") 'highlight-symbol-at-point)
+  (define-key global-map (kbd "M-<f3>") 'highlight-symbol-remove-all))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -379,11 +390,7 @@
 
     (setq helm-multi-swoop-edit-save t)
     (setq helm-swoop-split-with-multiple-windows t)
-    (setq helm-swoop-move-to-line-cycle nil)
-
-    ;; ace-isearch
-    ;; (global-ace-isearch-mode t)
-    ))
+    (setq helm-swoop-move-to-line-cycle nil)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -494,21 +501,67 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; elscreen
 (when (and (>= emacs-major-version 24) (require 'elscreen nil t))
-  (defmacro elscreen-create-automatically (ad-do-it)
-    `(if (not (elscreen-one-screen-p))
-         ,ad-do-it
-       (elscreen-create)
-       (elscreen-notify-screen-modification 'force-immediately)
-       (elscreen-message "New screen is automatically created")))
+  (defun elscreen-swap-previous()
+    "Interchange screens selected currently and previous."
+    (interactive)
+    (cond
+     ((elscreen-one-screen-p)
+      (elscreen-message "There is only one screen, cannot swap"))
+     (t
+      (let* ((screen-list (sort (elscreen-get-screen-list) '>))
+             (previous-screen
+              (or (nth 1 (memq (elscreen-get-current-screen) screen-list))
+                  (car screen-list)))
+             (current-screen (elscreen-get-current-screen))
+             (current-screen-property
+              (elscreen-get-screen-property current-screen))
+             (previous-screen-property
+              (elscreen-get-screen-property previous-screen)))
+        (elscreen-set-screen-property current-screen previous-screen-property)
+        (elscreen-set-screen-property previous-screen current-screen-property)
+        (elscreen-goto-internal (elscreen-get-current-screen)))))
+    (elscreen-previous))
 
-  (defadvice elscreen-next (around elscreen-create-automatically activate)
-    (elscreen-create-automatically ad-do-it))
+  (defun elscreen-swap-next()
+    "Interchange screens selected currently and next."
+    (interactive)
+    (cond
+     ((elscreen-one-screen-p)
+      (elscreen-message "There is only one screen, cannot swap"))
+     (t
+      (let* ((screen-list (sort (elscreen-get-screen-list) '<))
+             (next-screen
+              (or (nth 1 (memq (elscreen-get-current-screen) screen-list))
+                  (car screen-list)))
+             (current-screen (elscreen-get-current-screen))
+             (current-screen-property
+              (elscreen-get-screen-property current-screen))
+             (next-screen-property
+              (elscreen-get-screen-property next-screen)))
+        (elscreen-set-screen-property current-screen next-screen-property)
+        (elscreen-set-screen-property next-screen current-screen-property)
+        (elscreen-goto-internal (elscreen-get-current-screen)))))
+    (elscreen-next))
 
-  (defadvice elscreen-previous (around elscreen-create-automatically activate)
-    (elscreen-create-automatically ad-do-it))
+  ;; 直近バッファ選定時の無視リスト
+  (defvar elscreen-ignore-buffer-list
+    '("*Backtrace*" "*Colors*" "*Faces*" "*Compile-Log*" "*Packages*" "*vc-" "*Minibuf-" "*Messages" "*WL:Message"))
 
-  (defadvice elscreen-toggle (around elscreen-create-automatically activate)
-    (elscreen-create-automatically ad-do-it))
+  ;; elscreen用バッファ削除
+  (defun kill-buffer-for-elscreen ()
+    (interactive)
+    (kill-buffer)
+    (let* ((next-buffer nil)
+           (re (regexp-opt elscreen-ignore-buffer-list))
+           (next-buffer-list (mapcar (lambda (buf)
+                                       (let ((name (buffer-name buf)))
+                                         (when (not (string-match re name))
+                                           name)))
+                                     (buffer-list))))
+      (dolist (buf next-buffer-list)
+        (if (equal next-buffer nil)
+            (setq next-buffer buf)))
+      (switch-to-buffer next-buffer)))
 
   (setq elscreen-prefix-key (kbd "C-t"))
   (elscreen-start)
@@ -519,10 +572,20 @@
    '(elscreen-tab-current-screen-face ((((class color)) (:background "gray40" :foreground "gray95"))))
    '(elscreen-tab-other-screen-face ((((class color)) (:background "gray80" :foreground "gray10")))))
 
+  (setq elscreen-tab-display-kill-screen nil)
+  (setq elscreen-tab-display-control nil)
+
   (define-key elscreen-map (kbd "C-c") 'elscreen-create)
   (define-key elscreen-map (kbd "C-t") 'elscreen-next)
   (define-key elscreen-map (kbd "C-r") 'elscreen-previous)
-  (define-key elscreen-map (kbd "C-w") 'elscreen-kill))
+  (define-key elscreen-map (kbd "C-w") 'elscreen-kill)
+  (define-key elscreen-map (kbd "C-<right>") 'elscreen-swap-next)
+  (define-key elscreen-map (kbd "C-<left>") 'elscreen-swap-previous)
+  (define-key elscreen-map (kbd "C-k") 'kill-buffer-for-elscreen))
+
+;; elscreen-separate-buffer-list
+(when (require 'elscreen-separate-buffer-list nil t)
+  (elscreen-separate-buffer-list-mode))
 
 ;; popwin
 (when (require 'popwin nil t)
