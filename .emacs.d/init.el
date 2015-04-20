@@ -194,8 +194,16 @@
    nil 'japanese-jisx0208
    (font-spec :family "Hiragino Kaku Gothic ProN")))
 
+;; (when (eq window-system 'x)
+;;   (add-to-list 'default-frame-alist '(font . "ricty-12")))
+
 (when (eq window-system 'x)
-  (add-to-list 'default-frame-alist '(font . "ricty-12")))
+  (set-face-attribute 'default nil
+                      :family "Ricty"
+                      :height 140)
+  (set-fontset-font
+   nil 'japanese-jisx0208
+   (font-spec :family "Ricty")))
 
 ;; ウインドウの透明度設定
 (when (eq window-system 'ns)
