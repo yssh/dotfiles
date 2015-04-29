@@ -5,8 +5,20 @@
 # --------------------------------------
 # General Settings
 # --------------------------------------
-export PATH=/usr/local/bin:$PATH
-export MANPATH=/usr/local/share/man:$MANPATH
+# Variables
+case ${OSTYPE} in
+    darwin*)
+        export PATH=/usr/local/bin:$PATH
+        export MANPATH=/usr/local/share/man:$MANPATH
+        ;;
+    linux*)
+        export PATH=$HOME/.linuxbrew/bin:$PATH
+        export MANPATH=$HOME/.linuxbrew/share/man:$MANPATH
+        export INFOPATH=$HOME/.linuxbrew/share/info:$INFOPATH
+        export LD_LIBRARY_PATH=$HOME/.linuxbrew/lib:$LD_LIBRARY_PATH
+        ;;
+esac
+
 export LANG=ja_JP.UTF-8
 export PAGER=lv
 
@@ -20,7 +32,14 @@ setopt print_eight_bit                                   # 補完候補リスト
 # setopt correct                                           # コマンドのスペル訂正
 
 ### Complement ###
-fpath=(/usr/local/share/zsh-completions $fpath)
+case ${OSTYPE} in
+    darwin*)
+        fpath=(/usr/local/share/zsh-completions $fpath)
+        ;;
+    linux*)
+        fpath=($HOME/.linuxbrew/share/zsh-completions $fpath)
+        ;;
+esac
 autoload -U compinit; compinit                           # 補完機能有効化
 setopt list_packed                                       # 補完候補を詰めて表示
 setopt list_types                                        # 補完候補一覧でファイルの種別を識別マーク表示 (ls -F の記号)
@@ -79,15 +98,27 @@ RPROMPT='${vcs_info_msg_0_}'
 # Other Settings
 # --------------------------------------
 # Aliases
-alias ls="ls -FG"
-alias lsa="ls -FGa"
-alias lst="ls -lG"
-alias lsta="ls -lGa"
+case ${OSTYPE} in
+    darwin*)
+        alias ls="ls -FG"
+        alias lsa="ls -FGa"
+        alias lst="ls -lG"
+        alias lsta="ls -lGa"
+        alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs"
+        alias vim="/usr/local/bin/vim"
+        ;;
+    linux*)
+        alias ls="ls -F --color"
+        alias lsa="ls -Fa --color"
+        alias lst="ls -l --color"
+        alias lsta="ls -la --color"
+        ;;
+esac
+
 alias rm="rm -i"
 alias cp="cp -i"
 alias mv="mv -i"
 alias mkdir="mkdir -p"
-alias be='bundle exec'
 
 # Global Aliases
 alias -g G='| grep'
@@ -98,38 +129,26 @@ alias -g S='| sort'
 alias -g W='| wc'
 alias -g X='| xargs'
 
-# OS-dependent settings
-case ${OSTYPE} in
-    darwin*)
-        # Aliases
-        alias emacs="/Applications/Emacs.app/Contents/MacOS/Emacs"
-        alias vim="/usr/local/bin/vim"
-		;;
-    linux*)
-        ;;
-esac
-
 # rbenv
-if which rbenv > /dev/null; then
+if which rbenv > /dev/null 2>&1; then
     eval "$(rbenv init -)"
 fi
 
-# pyenv
-if which pyenv > /dev/null; then
+# pyenv & virtualenvwrapper
+if which pyenv > /dev/null 2>&1; then
     eval "$(pyenv init -)"
-fi
 
-# virtualenvwrapper
-if pip > /dev/null 2>&1; then
-    pyenv virtualenvwrapper
+    if pip > /dev/null 2>&1; then
+        pyenv virtualenvwrapper
+    fi
 fi
 
 # nodenv
-if which nodenv > /dev/null; then
+if which nodenv > /dev/null 2>&1; then
     eval "$(nodenv init -)"
 fi
 
 # direnv
-if which direnv > /dev/null; then
+if which direnv > /dev/null 2>&1; then
     eval "$(direnv hook zsh)"
 fi
