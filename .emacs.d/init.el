@@ -142,7 +142,7 @@
 (setq read-file-name-completion-ignore-case t)
 
 ;; 置換時に大文字小文字を区別する
-(setq case-replace nil)
+(setq case-replace t)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,8 +180,8 @@
 ;; 表示・装飾に関する設定
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 表示テーマの設定
-;; (when (eq window-system 'ns)
-;;   (load-theme 'zenburn t))
+(setq custom-theme-directory "~/.emacs.d/themes/")
+;;(load-theme 'ns-milk t)
 
 ;; フォントの設定
 (when (eq window-system 'ns)
@@ -200,7 +200,7 @@
 (when (eq window-system 'x)
   (set-face-attribute 'default nil
                       :family "Ricty"
-                      :height 140)
+                      :height 120)
   (set-fontset-font
    nil 'japanese-jisx0208
    (font-spec :family "Ricty")))
@@ -227,7 +227,7 @@
 ;; 括弧の対応関係のハイライト
 (show-paren-mode t)
 (setq show-paren-delay 0)
-(setq show-paren-style 'mixed)
+(setq show-paren-style 'expression)
 (set-face-background 'show-paren-match-face nil)
 (set-face-underline-p 'show-paren-match-face "red")
 
@@ -414,11 +414,11 @@
   ;; 除外するバッファ名
   (custom-set-variables
    '(*moccur-buffer-name-exclusion-list*
-     '("TAGS" "^*.*" "^[ ].+"))))
+     '("TAGS" "^*.*" "^[ ].+")))
 
-;; moccur-edit
-(when (require 'moccur-edit nil t)
-  (define-key moccur-mode-map (kbd "C-c C-p") 'moccur-edit-mode-in))
+  ;; moccur-edit
+  (when (require 'moccur-edit nil t)
+    (define-key moccur-mode-map (kbd "C-c C-p") 'moccur-edit-mode-in)))
 
 ;; wgrep
 (when (require 'wgrep nil t)
@@ -485,6 +485,7 @@
 
 (put 'dired-find-alternate-file 'disabled nil)
 
+(require 'dired)
 (define-key global-map (kbd "C-x C-d") 'dired)
 (define-key dired-mode-map (kbd "RET") 'dired-open-in-accordance-with-situation)
 (define-key dired-mode-map "a" 'dired-find-file)
@@ -749,7 +750,7 @@
 ;; elisp-completion
 (defun elisp-completion-hook ()
   (when (require 'auto-complete nil t)
-    (setq ac-sources
+    (set (make-local-variable 'ac-sources)
           '(ac-source-functions
             ac-source-variables
             ac-source-symbols
@@ -765,14 +766,14 @@
 ;; Shell
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun my-shell-mode-hook ()
-  (setq sh-basic-offset 4)
-  (setq sh-indentation 4))
+  (set (make-local-variable 'sh-basic-offset) 4)
+  (set (make-local-variable 'sh-indentation) 4))
 
 (add-hook 'sh-mode-hook 'my-shell-mode-hook)
 
 (defun shell-completion-hook ()
   (when (require 'auto-complete nil t)
-    (setq ac-sources
+    (set (make-local-variable 'ac-sources)
           '(ac-source-filename
             ac-source-yasnippet
             ac-source-dictionary))))
@@ -784,9 +785,9 @@
 ;; Fortran
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun my-fortran-mode-hook ()
-  (setq fortran-do-indent 2)
-  (setq fortran-if-indent 2)
-  (setq fortran-continuation-indent 6))
+  (set (make-local-variable 'fortran-do-indent) 2)
+  (set (make-local-variable 'fortran-if-indent) 2)
+  (set (make-local-variable 'fortran-continuation-indent) 6))
 
 (add-hook 'fortran-mode-hook 'my-fortran-mode-hook)
 
@@ -803,9 +804,8 @@
 ;; C/C++
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun my-c-mode-hook ()
-  "c/c++-mode-hooks"
   (when (require 'c-eldoc nil t)
-    (setq c-eldoc-cpp-command "/usr/bin/g++")
+    (set (make-local-variable 'c-eldoc-cpp-command) "/usr/bin/g++")
     (set (make-local-variable 'eldoc-idle-delay) 0.2)
     (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)
     (c-turn-on-eldoc-mode)))
@@ -816,7 +816,7 @@
 ;; C++-completion
 (defun cpp-completion-hook ()
   (when (require 'auto-complete nil t)
-    (add-to-list 'ac-sources 'ac-source-semantic)))
+    (add-to-list (make-local-variable 'ac-sources) 'ac-source-semantic)))
 
 (add-hook 'c++-mode-hook 'cpp-completion-hook)
 
@@ -827,22 +827,24 @@
 ;; perl-modeをcperl-modeのエイリアスにする
 (defalias 'perl-mode 'cperl-mode)
 
-;; インデント設定
-(setq cperl-indent-level 4 ; インデント幅を4にする
-      cperl-continued-statement-offset 4 ; 継続する文のオフセット※
-      cperl-brace-offset -4 ; ブレースのオフセット
-      cperl-label-offset -4 ; labelのオフセット
-      cperl-indent-parens-as-block t ; 括弧もブロックとしてインデント
-      cperl-close-paren-offset -4 ; 閉じ括弧のオフセット
-      cperl-tab-always-indent t ; TABをインデントにする
-      cperl-highlight-variables-indiscriminately t) ; スカラを常にハイライトする
+(defun my-perl-mode-hook()
+  (set (make-local-variable 'cperl-indent-level) 4)
+  (set (make-local-variable 'cperl-continued-statement-offset) 4)
+  (set (make-local-variable 'cperl-brace-offset) -4)
+  (set (make-local-variable 'cperl-label-offset) -4)
+  (set (make-local-variable 'cperl-indent-parens-as-block) t)
+  (set (make-local-variable 'cperl-close-paren-offset) -4)
+  (set (make-local-variable 'cperl-tab-always-indent) t)
+  (set (make-local-variable 'cperl-highlight-variables-indiscriminately) t))
+
+(add-hook 'cperl-mode-hook 'my-perl-mode-hook)
 
 ;; perl-completion
 (defun perl-completion-hook ()
   (when (require 'perl-completion nil t)
     (perl-completion-mode t)
     (when (require 'auto-complete nil t)
-      (setq ac-sources '(ac-source-perl-completion)))))
+      (add-to-list (make-local-variable 'ac-sources) '(ac-source-perl-completion)))))
 
 (add-hook 'cperl-mode-hook 'perl-completion-hook)
 
@@ -852,8 +854,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; jedi
 (when (require 'jedi nil t)
-  (add-hook 'python-mode-hook 'jedi:setup)
-  (setq jedi:complete-on-dot t))
+  (add-hook 'python-mode-hook
+            '(lambda ()
+               (jedi:setup)
+               (set (make-local-variable 'jedi:complete-on-dot) t))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -866,26 +870,20 @@
 (add-to-list 'auto-mode-alist '("\\.rake$"   . ruby-mode))
 
 (defun my-ruby-mode-hook ()
-  (setq ruby-deep-indent-paren-style nil)
+  (set (make-local-variable 'ruby-deep-indent-paren-style) nil)
   (set (make-local-variable 'electric-pair-pairs) '((?\| . ?\|))))
 
 (add-hook 'ruby-mode-hook 'my-ruby-mode-hook)
-
-;; ruby-electric
-(when (require 'ruby-electric nil t)
-  (add-hook 'ruby-mode-hook
-            '(lambda ()
-               (ruby-electric-mode t)
-               (when (>= emacs-major-version 24)
-                 (set (make-local-variable 'electric-pair-mode) nil)))))
 
 ;; ruby-end
 (require 'ruby-end nil t)
 
 ;; ruby-block
 (when (require 'ruby-block nil t)
-  (ruby-block-mode t)
-  (setq ruby-block-highlight-toggle t))
+  (add-hook 'ruby-mode-hook
+            '(lambda ()
+               (ruby-block-mode t)
+               (set (make-local-variable 'ruby-block-highlight-toggle) t))))
 
 ;; inf-ruby
 (autoload 'run-ruby "inf-ruby" "Run an inferior Ruby process")
@@ -902,14 +900,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (when (require 'php-mode nil t)
   (add-to-list 'auto-mode-alist '("\\.ctp\\'" . php-mode))
-  (setq php-search-url "http://jp.php.net/ja/")
-  (setq php-manual-url "http://jp.php.net/manual/ja/"))
+  (set (make-local-variable 'php-search-url) "http://jp.php.net/ja/")
+  (set (make-local-variable 'php-manual-url) "http://jp.php.net/manual/ja/"))
 
 (defun my-php-mode-hook ()
-  (setq c-basic-offset 4)
-  ;; (c-set-offset 'case-label '+) ; switch文のcaseラベル
-  (c-set-offset 'arglist-intro '+) ; 配列の最初の要素が改行した場合
-  (c-set-offset 'arglist-close 0)) ; 配列の閉じ括弧
+  (set (make-local-variable 'c-basic-offset) 4)
+  (c-set-offset 'arglist-intro '+)
+  (c-set-offset 'arglist-close 0))
 
 (add-hook 'php-mode-hook 'my-php-mode-hook)
 
@@ -920,7 +917,7 @@
     (define-key php-mode-map (kbd "C-o") 'phpcmp-complete)
 
     (when (require 'auto-complete nil t)
-      (add-to-list 'ac-sources 'ac-source-php-completion))))
+      (add-to-list (make-local-variable 'ac-sources) 'ac-source-php-completion))))
 
 (add-hook 'php-mode-hook 'php-completion-hook)
 
@@ -929,41 +926,55 @@
 ;; HTML/ERB
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (when (require 'web-mode nil t)
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-
   (add-to-list 'auto-mode-alist '("\\.erb$"   . web-mode))
   (add-to-list 'auto-mode-alist '("\\.html?$" . web-mode))
   (add-to-list 'ac-modes 'web-mode))
+
+(defun my-web-mode-hook ()
+  (set-face-attribute 'web-mode-symbol-face nil :foreground "#FF7400")
+
+  (set (make-local-variable 'web-mode-markup-indent-offset) 2)
+  (set (make-local-variable 'web-mode-css-indent-offset) 2)
+  (set (make-local-variable 'web-mode-code-indent-offset) 2))
+
+(add-hook 'web-mode-hook 'my-web-mode-hook)
+(add-hook 'web-mode-hook 'auto-highlight-symbol-mode)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; JavaScrpt
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun my-js-mode-hook ()
-  ;; インデント幅を2にする
-  (setq js-indent-level 2
-        js-expr-indent-offset 2))
+  (set (make-local-variable 'js-indent-level) 2)
+  (set (make-local-variable 'js-expr-indent-offset) 2))
 
-;; js-modeの起動時にhookを追加
 (add-hook 'js-mode-hook 'my-js-mode-hook)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CoffeeScrpt
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (require 'coffee-mode nil t)
+  (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
+  (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
+  (add-to-list 'ac-modes 'coffee-mode))
+
+(defun my-coffee-mode-hook ()
+  (set (make-local-variable 'coffee-tab-width) 2))
+
+(add-hook 'coffee-mode-hook 'my-coffee-mode-hook)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CSS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun my-css-mode-hook ()
-  "css-mode hooks"
-  ;; インデントをCスタイルにする
-  (setq cssm-indent-function #'cssm-c-style-indenter)
-  ;; インデント幅を2にする
-  (setq cssm-indent-level 2)
-  ;; 閉じ括弧の前に改行を挿入する
-  (setq cssm-newline-before-closing-bracket t)
+  (set (make-local-variable 'cssm-indent-function) #'cssm-c-style-indenter)
+  (set (make-local-variable 'cssm-indent-level) 2)
+  (set (make-local-variable 'cssm-newline-before-closing-bracket) t)
 
   (when (require 'auto-complete nil t)
-    (add-to-list 'ac-sources 'ac-source-css-property)))
+    (add-to-list (make-local-variable'ac-sources) 'ac-source-css-property)))
 
 (add-hook 'css-mode-hook 'my-css-mode-hook)
 
@@ -972,17 +983,15 @@
 ;; SCSS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (when (require 'scss-mode nil t)
-  (add-to-list 'auto-mode-alist '("\\.scss$" . scss-mode)))
+  (add-to-list 'auto-mode-alist '("\\.scss$" . scss-mode))
+  (add-to-list 'ac-modes 'scss-mode))
 
 (defun my-scss-mode-hook ()
-  "scss-mode-hook"
-  ;; インデント幅を2にする
-  (setq css-indent-offset 2)
-  ;; 自動コンパイルをオフにする
-  (setq scss-compile-at-save nil)
+  (set (make-local-variable 'css-indent-offset) 2)
+  (set (make-local-variable 'scss-compile-at-save) nil)
 
   (when (require 'auto-complete nil t)
-    (add-to-list 'ac-sources 'ac-source-css-property)))
+    (add-to-list (make-local-variable 'ac-sources) 'ac-source-css-property)))
 
 (add-hook 'scss-mode-hook 'my-scss-mode-hook)
 
