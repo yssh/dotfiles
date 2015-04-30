@@ -439,7 +439,7 @@
         '(ag-reuse-buffers 'nil)) ; 現在のバッファを検索結果表示に使わない
         ))
 
-  (define-key global-map (kbd "C-x C-@") 'ag)
+  (define-key global-map (kbd "C-x C-a") 'ag)
 
   (when (locate-library "wgrep-ag")
     (autoload 'wgrep-ag-setup "wgrep-ag" nil t)
@@ -684,7 +684,6 @@
     '(progn
        (custom-set-variables '(yas-snippet-dirs '("~/.emacs.d/snippets")))
 
-       (define-key yas-minor-mode-map (kbd "<tab>") nil)
        (define-key yas-minor-mode-map (kbd "TAB") nil)
        (define-key yas-minor-mode-map (kbd "C-o") 'yas-expand)
        (define-key yas-minor-mode-map (kbd "C-x i i") 'yas-insert-snippet)
