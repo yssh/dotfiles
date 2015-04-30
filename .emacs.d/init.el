@@ -96,8 +96,8 @@
   (when (one-window-p)
     (split-window-vertically))
   (other-window val))
-(define-key global-map (kbd "<C-tab>") (lambda () (interactive) (other-window-or-split 1)))
-(define-key global-map (kbd "<C-S-tab>") (lambda () (interactive) (other-window-or-split -1)))
+(define-key global-map (kbd "C-<tab>") (lambda () (interactive) (other-window-or-split 1)))
+(define-key global-map (kbd "C-S-<tab>") (lambda () (interactive) (other-window-or-split -1)))
 
 ;; ウインドウを閉じる
 (define-key global-map (kbd "C-x C-w") 'delete-window)
@@ -351,7 +351,7 @@
   (custom-set-variables
    '(helm-truncate-lines t)
    '(helm-boring-buffer-regexp-list '("^*"))
-   '(helm-boring-file-regexp-list '("\\.elc$"))
+   '(helm-boring-file-regexp-list '("\\.o$" "\\.elc$"))
    '(helm-skip-boring-buffers t)
    '(helm-skip-boring-files t))
 
@@ -406,11 +406,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; color-moccur
 (when (require 'color-moccur nil t)
-  ;; キーバインド
   (define-key global-map (kbd "C-o") 'occur-by-moccur)
   (define-key global-map (kbd "C-M-o") 'moccur)
+
   ;; スペース区切りでAND検索
   (setq moccur-split-word t)
+
   ;; 除外するバッファ名
   (custom-set-variables
    '(*moccur-buffer-name-exclusion-list*
@@ -432,11 +433,10 @@
    '(ag-reuse-window 'nil)   ; 現在のウィンドウを検索結果表示に使わない
    '(ag-reuse-buffers 'nil)) ; 現在のバッファを検索結果表示に使わない
 
-  (define-key global-map (kbd "C-x C-a") 'ag)
+  (define-key global-map (kbd "C-x C-@") 'ag)
 
-  (when (require 'wgrep-ag nil t)
-    (autoload 'wgrep-ag-setup "wgrep-ag")
-    (add-hook 'ag-mode-hook 'wgrep-ag-setup)))
+  (autoload 'wgrep-ag-setup "wgrep-ag" nil t)
+  (add-hook 'ag-mode-hook 'wgrep-ag-setup))
 
 ;; anzu
 (when (require 'anzu nil t)
@@ -590,11 +590,11 @@
   (define-key elscreen-map (kbd "C-w") 'elscreen-kill)
   (define-key elscreen-map (kbd "C-<right>") 'elscreen-swap-next)
   (define-key elscreen-map (kbd "C-<left>") 'elscreen-swap-previous)
-  (define-key elscreen-map (kbd "C-k") 'kill-buffer-for-elscreen))
+  (define-key elscreen-map (kbd "C-k") 'kill-buffer-for-elscreen)
 
-;; elscreen-separate-buffer-list
-(when (require 'elscreen-separate-buffer-list nil t)
-  (elscreen-separate-buffer-list-mode))
+  ;; elscreen-separate-buffer-list
+  (when (require 'elscreen-separate-buffer-list nil t)
+    (elscreen-separate-buffer-list-mode)))
 
 ;; popwin
 (when (require 'popwin nil t)
@@ -651,24 +651,25 @@
                               (?\{ . ?\})
                               )))
 
-;; region-bindings-mode
-(when (require 'region-bindings-mode nil t)
-  (region-bindings-mode-enable))
-
 ;; expand-region
 (when (require 'expand-region nil t)
   (global-set-key (kbd "C-@") 'er/expand-region)
   (global-set-key (kbd "C-M-@") 'er/contract-region))
+
+;; region-bindings-mode
+(when (require 'region-bindings-mode nil t)
+  (region-bindings-mode-enable))
 
 ;; multiple-cursors
 (when (require 'multiple-cursors nil t)
   (define-key global-map (kbd "C-<") 'mc/mark-previous-like-this)
   (define-key global-map (kbd "C->") 'mc/mark-next-like-this)
 
-  (define-key region-bindings-mode-map (kbd "C-a") 'mc/mark-all-like-this)
-  (define-key region-bindings-mode-map (kbd "C-p") 'mc/mark-previous-like-this)
-  (define-key region-bindings-mode-map (kbd "C-n") 'mc/mark-next-like-this)
-  (define-key region-bindings-mode-map (kbd "C-m") 'mc/mark-more-like-this-extended))
+  (when (locate-library "region-bindings-mode")
+    (define-key region-bindings-mode-map (kbd "C-a") 'mc/mark-all-like-this)
+    (define-key region-bindings-mode-map (kbd "C-p") 'mc/mark-previous-like-this)
+    (define-key region-bindings-mode-map (kbd "C-n") 'mc/mark-next-like-this)
+    (define-key region-bindings-mode-map (kbd "C-m") 'mc/mark-more-like-this-extended)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -738,28 +739,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Emacs-Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun my-elisp-mode-hook ()
-  "lisp-mode-hooks"
-  (when (require 'eldoc nil t)
-    (set (make-local-variable 'eldoc-idle-delay) 0.2)
-    (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)
-    (turn-on-eldoc-mode)))
+;; eldoc
+(when (locate-library "eldoc")
+  (autoload 'eldoc-mode "eldoc" nil t)
+  (eval-after-load 'eldoc-mode
+    '(progn
+       (set (make-local-variable 'eldoc-idle-delay) 0.2)
+       (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)))
 
-(add-hook 'emacs-lisp-mode-hook 'my-elisp-mode-hook)
+  (add-hook 'emacs-lisp-mode-hook 'eldoc-mode))
 
 ;; elisp-completion
-(defun elisp-completion-hook ()
-  (when (require 'auto-complete nil t)
+(when (locate-library "auto-complete")
+  (defun elisp-completion-hook ()
     (set (make-local-variable 'ac-sources)
-          '(ac-source-functions
-            ac-source-variables
-            ac-source-symbols
-            ac-source-features
-            ac-source-yasnippet
-            ac-source-dictionary
-            ac-source-words-in-same-mode-buffers))))
+         '(ac-source-functions
+           ac-source-variables
+           ac-source-symbols
+           ac-source-features
+           ac-source-yasnippet
+           ac-source-dictionary
+           ac-source-words-in-same-mode-buffers)))
 
-(add-hook 'emacs-lisp-mode-hook 'elisp-completion-hook)
+  (add-hook 'emacs-lisp-mode-hook 'elisp-completion-hook))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -771,14 +773,15 @@
 
 (add-hook 'sh-mode-hook 'my-shell-mode-hook)
 
-(defun shell-completion-hook ()
-  (when (require 'auto-complete nil t)
+;; shell-completion
+(when (locate-library "auto-complete")
+  (defun shell-completion-hook ()
     (set (make-local-variable 'ac-sources)
-          '(ac-source-filename
-            ac-source-yasnippet
-            ac-source-dictionary))))
+         '(ac-source-filename
+           ac-source-yasnippet
+           ac-source-dictionary)))
 
-(add-hook 'sh-mode-hook 'shell-completion-hook)
+  (add-hook 'sh-mode-hook 'shell-completion-hook))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -803,28 +806,30 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; C/C++
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun my-c-mode-hook ()
-  (when (require 'c-eldoc nil t)
-    (set (make-local-variable 'c-eldoc-cpp-command) "/usr/bin/g++")
-    (set (make-local-variable 'eldoc-idle-delay) 0.2)
-    (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)
-    (c-turn-on-eldoc-mode)))
+;; c-eldoc
+(when (locate-library "c-eldoc")
+  (autoload 'c-eldoc-mode "c-eldoc" nil t)
+  (eval-after-load 'c-eldoc-mode
+    '(progn
+       (set (make-local-variable 'c-eldoc-cpp-command) "/usr/bin/g++")
+       (set (make-local-variable 'eldoc-idle-delay) 0.2)
+       (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)))
 
-(add-hook 'c-mode-hook 'my-c-mode-hook)
-(add-hook 'c++-mode-hook 'my-c-mode-hook)
+  (add-hook 'c-mode-hook 'c-eldoc-mode)
+  (add-hook 'c++-mode-hook 'c-eldoc-mode))
 
 ;; C++-completion
-(defun cpp-completion-hook ()
-  (when (require 'auto-complete nil t)
-    (add-to-list (make-local-variable 'ac-sources) 'ac-source-semantic)))
+(when (locate-library "auto-complete")
+  (defun cpp-completion-hook ()
+    (add-to-list (make-local-variable 'ac-sources)
+                 'ac-source-semantic))
 
-(add-hook 'c++-mode-hook 'cpp-completion-hook)
+  (add-hook 'c++-mode-hook 'cpp-completion-hook))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Perl
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; perl-modeをcperl-modeのエイリアスにする
 (defalias 'perl-mode 'cperl-mode)
 
 (defun my-perl-mode-hook()
@@ -840,24 +845,27 @@
 (add-hook 'cperl-mode-hook 'my-perl-mode-hook)
 
 ;; perl-completion
-(defun perl-completion-hook ()
-  (when (require 'perl-completion nil t)
+(when (require 'perl-completion nil t)
+  (defun perl-completion-hook ()
     (perl-completion-mode t)
-    (when (require 'auto-complete nil t)
-      (add-to-list (make-local-variable 'ac-sources) '(ac-source-perl-completion)))))
+    (when (locate-library "auto-complete")
+      (add-to-list (make-local-variable 'ac-sources)
+                   '(ac-source-perl-completion))))
 
-(add-hook 'cperl-mode-hook 'perl-completion-hook)
+  (add-hook 'cperl-mode-hook 'perl-completion-hook))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; jedi
-(when (require 'jedi nil t)
-  (add-hook 'python-mode-hook
-            '(lambda ()
-               (jedi:setup)
-               (set (make-local-variable 'jedi:complete-on-dot) t))))
+(when (locate-library "jedi")
+  (autoload 'jedi:setup "jedi" nil t)
+  (eval-after-load 'jedi:setup
+    '(progn
+       (set (make-local-variable 'jedi:complete-on-dot) t)))
+
+  (add-hook 'python-mode-hook 'jedi:setup))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -876,19 +884,24 @@
 (add-hook 'ruby-mode-hook 'my-ruby-mode-hook)
 
 ;; ruby-end
-(require 'ruby-end nil t)
+(when (locate-library "ruby-end")
+  (autoload 'ruby-end-mode "ruby-end" nil t)
+  (add-hook 'ruby-mode-hook 'ruby-end-mode))
 
 ;; ruby-block
-(when (require 'ruby-block nil t)
-  (add-hook 'ruby-mode-hook
-            '(lambda ()
-               (ruby-block-mode t)
-               (set (make-local-variable 'ruby-block-highlight-toggle) t))))
+(when (locate-library "ruby-block")
+  (autoload 'ruby-block-mode "ruby-block" nil t)
+  (eval-after-load 'ruby-block
+    '(progn
+       (set (make-local-variable 'ruby-block-highlight-toggle) t)))
+
+  (add-hook 'ruby-mode-hook 'ruby-block-mode))
 
 ;; inf-ruby
-(autoload 'run-ruby "inf-ruby" "Run an inferior Ruby process")
-(autoload 'inf-ruby-keys "inf-ruby" "Set local key defs for inf-ruby in ruby-mode")
-(add-hook 'ruby-mode-hook 'inf-ruby-minor-mode)
+(when (locate-library "inf-ruby")
+  (autoload 'run-ruby "inf-ruby" nil t)
+  (autoload 'inf-ruby-keys "inf-ruby" nil t)
+  (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode))
 
 ;; robe
 (add-hook 'ruby-mode-hook 'robe-mode)
@@ -898,47 +911,54 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PHP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'php-mode nil t)
+(when (locate-library "php-mode")
+  (autoload 'php-mode "php-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.ctp\\'" . php-mode))
-  (set (make-local-variable 'php-search-url) "http://jp.php.net/ja/")
-  (set (make-local-variable 'php-manual-url) "http://jp.php.net/manual/ja/"))
 
-(defun my-php-mode-hook ()
-  (set (make-local-variable 'c-basic-offset) 4)
-  (c-set-offset 'arglist-intro '+)
-  (c-set-offset 'arglist-close 0))
+  (defun my-php-mode-hook ()
+    (set (make-local-variable 'c-basic-offset) 4)
+    (set (make-local-variable 'php-search-url) "http://jp.php.net/ja/")
+    (set (make-local-variable 'php-manual-url) "http://jp.php.net/manual/ja/")
+    (c-set-offset 'arglist-intro '+)
+    (c-set-offset 'arglist-close 0))
 
-(add-hook 'php-mode-hook 'my-php-mode-hook)
+  (add-hook 'php-mode-hook 'my-php-mode-hook)
 
-;; php-completion
-(defun php-completion-hook ()
+  ;; php-completion
   (when (require 'php-completion nil t)
-    (php-completion-mode t)
-    (define-key php-mode-map (kbd "C-o") 'phpcmp-complete)
+    (defun php-completion-hook ()
+      (php-completion-mode t)
+      (define-key php-mode-map (kbd "C-o") 'phpcmp-complete)
 
-    (when (require 'auto-complete nil t)
-      (add-to-list (make-local-variable 'ac-sources) 'ac-source-php-completion))))
+      (when (locate-library "auto-complete")
+        (add-to-list (make-local-variable 'ac-sources)
+                     'ac-source-php-completion)))
 
-(add-hook 'php-mode-hook 'php-completion-hook)
+    (add-hook 'php-mode-hook 'php-completion-hook)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; HTML/ERB
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'web-mode nil t)
-  (add-to-list 'auto-mode-alist '("\\.erb$"   . web-mode))
+(when (locate-library "web-mode")
+  (autoload 'web-mode "web-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.html?$" . web-mode))
-  (add-to-list 'ac-modes 'web-mode))
+  (add-to-list 'auto-mode-alist '("\\.erb$"   . web-mode))
 
-(defun my-web-mode-hook ()
-  (set-face-attribute 'web-mode-symbol-face nil :foreground "#FF7400")
+  (defun my-web-mode-hook ()
+    (set-face-attribute 'web-mode-symbol-face nil :foreground "#FF7400")
 
-  (set (make-local-variable 'web-mode-markup-indent-offset) 2)
-  (set (make-local-variable 'web-mode-css-indent-offset) 2)
-  (set (make-local-variable 'web-mode-code-indent-offset) 2))
+    (set (make-local-variable 'web-mode-markup-indent-offset) 2)
+    (set (make-local-variable 'web-mode-css-indent-offset) 2)
+    (set (make-local-variable 'web-mode-code-indent-offset) 2))
 
-(add-hook 'web-mode-hook 'my-web-mode-hook)
-(add-hook 'web-mode-hook 'auto-highlight-symbol-mode)
+  (add-hook 'web-mode-hook 'my-web-mode-hook)
+
+  (when (locate-library "auto-complete")
+    (add-hook 'web-mode-hook 'auto-complete-mode))
+
+  (when (locate-library "auto-highlight-symbol")
+    (add-hook 'web-mode-hook 'auto-highlight-symbol-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -954,15 +974,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CoffeeScrpt
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'coffee-mode nil t)
+(when (locate-library "coffee-mode")
+  (autoload 'coffee-mode "coffee-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
   (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
-  (add-to-list 'ac-modes 'coffee-mode))
 
-(defun my-coffee-mode-hook ()
-  (set (make-local-variable 'coffee-tab-width) 2))
+  (defun my-coffee-mode-hook ()
+    (set (make-local-variable 'coffee-tab-width) 2))
 
-(add-hook 'coffee-mode-hook 'my-coffee-mode-hook)
+  (add-hook 'coffee-mode-hook 'my-coffee-mode-hook)
+
+  (when (locate-library "auto-complete")
+    (add-hook 'coffee-mode-hook 'auto-complete-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -973,8 +996,9 @@
   (set (make-local-variable 'cssm-indent-level) 2)
   (set (make-local-variable 'cssm-newline-before-closing-bracket) t)
 
-  (when (require 'auto-complete nil t)
-    (add-to-list (make-local-variable'ac-sources) 'ac-source-css-property)))
+  (when (locate-library "auto-complete")
+    (add-to-list (make-local-variable 'ac-sources)
+                 'ac-source-css-property)))
 
 (add-hook 'css-mode-hook 'my-css-mode-hook)
 
@@ -982,24 +1006,27 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SCSS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'scss-mode nil t)
+(when (locate-library "scss-mode")
+  (autoload 'scss-mode "scss-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.scss$" . scss-mode))
-  (add-to-list 'ac-modes 'scss-mode))
+  (add-to-list 'ac-modes 'scss-mode)
 
-(defun my-scss-mode-hook ()
-  (set (make-local-variable 'css-indent-offset) 2)
-  (set (make-local-variable 'scss-compile-at-save) nil)
+  (defun my-scss-mode-hook ()
+    (set (make-local-variable 'css-indent-offset) 2)
+    (set (make-local-variable 'scss-compile-at-save) nil)
 
-  (when (require 'auto-complete nil t)
-    (add-to-list (make-local-variable 'ac-sources) 'ac-source-css-property)))
+    (when (locate-library "auto-complete")
+      (add-to-list (make-local-variable 'ac-sources)
+                   'ac-source-css-property)))
 
-(add-hook 'scss-mode-hook 'my-scss-mode-hook)
+  (add-hook 'scss-mode-hook 'my-scss-mode-hook))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Yaml
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'yaml-mode nil t)
+(when (locate-library "yaml-mode")
+  (autoload 'yaml-mode "yaml-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode)))
 
 
@@ -1036,8 +1063,9 @@
 ;; Subversion
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dsvn
-(autoload 'svn-status "dsvn" "Run `svn status'." t)
-(autoload 'svn-update "dsvn" "Run `svn update'." t)
+(when (locate-library "dsvn")
+  (autoload 'svn-status "dsvn" nil t)
+  (autoload 'svn-update "dsvn" nil t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
