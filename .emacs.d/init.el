@@ -638,6 +638,8 @@
                   ac-source-dictionary
                   ac-source-words-in-same-mode-buffers))
 
+  (define-key ac-mode-map (kbd "C-i") 'auto-complete)
+
   (global-auto-complete-mode t))
 
 ;; cua-mode
@@ -691,8 +693,8 @@
 
        ;; auto-complete連携
        (when (locate-library "auto-complete")
-         (add-to-list (make-local-variable 'ac-sources)
-                      'ac-source-yasnippet)
+         (setq-default ac-sources
+                       (append ac-sources '(ac-source-yasnippet)))
 
          ;; yasnippetのbindingを指定するとエラーが出るので回避
          (setf (symbol-function 'yas-active-keys)
@@ -757,21 +759,21 @@
   (autoload 'eldoc-mode "eldoc" nil t)
   (eval-after-load "eldoc"
     '(progn
-       (set (make-local-variable 'eldoc-idle-delay) 0.2)
-       (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)))
+       (setq eldoc-idle-delay 0.2)
+       (setq eldoc-echo-area-use-multiline-p t)))
 
   (add-hook 'emacs-lisp-mode-hook 'eldoc-mode))
 
 ;; elisp-completion
 (when (locate-library "auto-complete")
   (defun elisp-completion-hook ()
-    (set (make-local-variable 'ac-sources)
-         '(ac-source-functions
-           ac-source-variables
-           ac-source-symbols
-           ac-source-features
-           ac-source-dictionary
-           ac-source-words-in-same-mode-buffers)))
+    (setq ac-sources
+          '(ac-source-functions
+            ac-source-variables
+            ac-source-symbols
+            ac-source-features
+            ac-source-dictionary
+            ac-source-words-in-same-mode-buffers)))
 
   (add-hook 'emacs-lisp-mode-hook 'elisp-completion-hook))
 
@@ -792,9 +794,9 @@
 ;; shell-completion
 (when (locate-library "auto-complete")
   (defun shell-completion-hook ()
-    (set (make-local-variable 'ac-sources)
-         '(ac-source-filename
-           ac-source-dictionary)))
+    (setq ac-sources
+          '(ac-source-filename
+            ac-source-dictionary)))
 
   (add-hook 'sh-mode-hook 'shell-completion-hook))
 
@@ -830,10 +832,10 @@
   (autoload 'c-eldoc-mode "c-eldoc" nil t)
   (eval-after-load "c-eldoc"
     '(progn
-       (set (make-local-variable 'c-eldoc-cpp-command) "/usr/bin/g++")
-       (set (make-local-variable 'c-eldoc-buffer-regenerate-time) 60)
-       (set (make-local-variable 'eldoc-idle-delay) 0.2)
-       (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)))
+       (setq c-eldoc-cpp-command "/usr/bin/g++")
+       (setq c-eldoc-buffer-regenerate-time 60)
+       (setq eldoc-idle-delay 0.2)
+       (setq eldoc-echo-area-use-multiline-p t)))
 
   (add-hook 'c-mode-hook 'c-eldoc-mode)
   (add-hook 'c++-mode-hook 'c-eldoc-mode))
@@ -841,8 +843,7 @@
 ;; C++-completion
 (when (locate-library "auto-complete")
   (defun cpp-completion-hook ()
-    (add-to-list (make-local-variable 'ac-sources)
-                 'ac-source-semantic))
+    (add-to-list 'ac-sources 'ac-source-semantic t))
 
   (add-hook 'c++-mode-hook 'cpp-completion-hook))
 
@@ -869,8 +870,7 @@
   (defun perl-completion-hook ()
     (perl-completion-mode t)
     (when (locate-library "auto-complete")
-      (add-to-list (make-local-variable 'ac-sources)
-                   '(ac-source-perl-completion))))
+      (add-to-list 'ac-sources 'ac-source-perl-completion t)))
 
   (add-hook 'cperl-mode-hook 'perl-completion-hook))
 
@@ -887,7 +887,7 @@
   (autoload 'jedi:setup "jedi" nil t)
   (eval-after-load "jedi"
     '(progn
-       (set (make-local-variable 'jedi:complete-on-dot) t)))
+       (setq jedi:complete-on-dot t)))
 
   (add-hook 'python-mode-hook 'jedi:setup))
 
@@ -925,7 +925,7 @@
   (autoload 'ruby-block-mode "ruby-block" nil t)
   (eval-after-load "ruby-block"
     '(progn
-       (set (make-local-variable 'ruby-block-highlight-toggle) t)))
+       (setq ruby-block-highlight-toggle t)))
 
   (add-hook 'ruby-mode-hook 'ruby-block-mode))
 
@@ -972,8 +972,7 @@
       (define-key php-mode-map (kbd "C-o") 'phpcmp-complete)
 
       (when (locate-library "auto-complete")
-        (add-to-list (make-local-variable 'ac-sources)
-                     'ac-source-php-completion)))
+        (add-to-list 'ac-sources 'ac-source-php-completion t)))
 
     (add-hook 'php-mode-hook 'php-completion-hook))
 
@@ -999,9 +998,6 @@
 
   (add-hook 'web-mode-hook 'my-web-mode-hook)
 
-  (when (locate-library "auto-complete")
-    (add-hook 'web-mode-hook 'auto-complete-mode))
-
   ;; yasnippet
   (when (locate-library "yasnippet")
     (add-hook 'web-mode-hook 'yas/minor-mode-on)))
@@ -1025,13 +1021,14 @@
   (add-to-list 'auto-mode-alist '("\\.coffee$" . coffee-mode))
   (add-to-list 'auto-mode-alist '("Cakefile" . coffee-mode))
 
+  (when (locate-library "auto-complete")
+    (add-to-list 'ac-modes 'coffee-mode))
+
   (defun my-coffee-mode-hook ()
+    (set (make-local-variable 'tab-width) 2)
     (set (make-local-variable 'coffee-tab-width) 2))
 
-  (add-hook 'coffee-mode-hook 'my-coffee-mode-hook)
-
-  (when (locate-library "auto-complete")
-    (add-hook 'coffee-mode-hook 'auto-complete-mode)))
+  (add-hook 'coffee-mode-hook 'my-coffee-mode-hook))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1043,8 +1040,7 @@
   (set (make-local-variable 'cssm-newline-before-closing-bracket) t)
 
   (when (locate-library "auto-complete")
-    (add-to-list (make-local-variable 'ac-sources)
-                 'ac-source-css-property)))
+    (add-to-list 'ac-sources 'ac-source-css-property t)))
 
 (add-hook 'css-mode-hook 'my-css-mode-hook)
 
@@ -1055,15 +1051,16 @@
 (when (locate-library "scss-mode")
   (autoload 'scss-mode "scss-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.scss$" . scss-mode))
-  (add-to-list 'ac-modes 'scss-mode)
+
+  (when (locate-library "auto-complete")
+    (add-to-list 'ac-modes 'scss-mode))
 
   (defun my-scss-mode-hook ()
     (set (make-local-variable 'css-indent-offset) 2)
     (set (make-local-variable 'scss-compile-at-save) nil)
 
     (when (locate-library "auto-complete")
-      (add-to-list (make-local-variable 'ac-sources)
-                   'ac-source-css-property)))
+      (add-to-list 'ac-sources 'ac-source-css-property t)))
 
   (add-hook 'scss-mode-hook 'my-scss-mode-hook))
 
