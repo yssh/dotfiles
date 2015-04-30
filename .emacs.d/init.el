@@ -253,16 +253,13 @@
 (when (require 'volatile-highlights nil t)
   (volatile-highlights-mode t))
 
-;; auto-highlight-symbol
-(when (require 'auto-highlight-symbol nil t)
-  (global-auto-highlight-symbol-mode t))
-
 ;; highlight-symbol
 (when (require 'highlight-symbol nil t)
   (setq highlight-symbol-colors '("DarkOrange" "DodgerBlue1" "DeepPink1"))
 
   (define-key global-map (kbd "<f3>") 'highlight-symbol-at-point)
-  (define-key global-map (kbd "M-<f3>") 'highlight-symbol-remove-all))
+  (define-key global-map (kbd "M-<f3>") 'highlight-symbol-remove-all)
+  (define-key global-map (kbd "C-<f3>") 'highlight-symbol-query-replace))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -367,7 +364,6 @@
   (defun helm-moccur ()
     (interactive)
     (let ((buffers (moccur-filter-buffers (buffer-list))))
-      ;; sort
       (setq buffers (sort buffers moccur-buffer-sort-method))
       (helm-multi-occur buffers)))
 
@@ -405,21 +401,27 @@
 ;; 検索と置換
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; color-moccur
-(when (require 'color-moccur nil t)
+(when (locate-library "color-moccur")
+  (autoload 'moccur-filter-buffers "color-moccur" nil t)
+  (autoload 'occur-by-moccur "color-moccur" nil t)
+  (autoload 'moccur "color-moccur" nil t)
+  (eval-after-load "color-moccur"
+    '(progn
+       ;; スペース区切りでAND検索
+       (setq moccur-split-word t)
+
+       ;; 除外するバッファ名
+       (custom-set-variables
+        '(*moccur-buffer-name-exclusion-list*
+          '("TAGS" "^*.*" "^[ ].+")))
+
+       ;; moccur-edit
+       (when (locate-library "moccur-edit")
+         (autoload 'moccur-edit-mode-in "moccur-edit" nil t)
+         (define-key moccur-mode-map (kbd "C-c C-p") 'moccur-edit-mode-in))))
+
   (define-key global-map (kbd "C-o") 'occur-by-moccur)
-  (define-key global-map (kbd "C-M-o") 'moccur)
-
-  ;; スペース区切りでAND検索
-  (setq moccur-split-word t)
-
-  ;; 除外するバッファ名
-  (custom-set-variables
-   '(*moccur-buffer-name-exclusion-list*
-     '("TAGS" "^*.*" "^[ ].+")))
-
-  ;; moccur-edit
-  (when (require 'moccur-edit nil t)
-    (define-key moccur-mode-map (kbd "C-c C-p") 'moccur-edit-mode-in)))
+  (define-key global-map (kbd "C-M-o") 'moccur))
 
 ;; wgrep
 (when (require 'wgrep nil t)
@@ -427,16 +429,22 @@
   (setq wgrep-auto-save-buffer t))
 
 ;; ag
-(when (require 'ag nil t)
-  (custom-set-variables
-   '(ag-highlight-search t)  ; 検索結果の中の検索語をハイライトする
-   '(ag-reuse-window 'nil)   ; 現在のウィンドウを検索結果表示に使わない
-   '(ag-reuse-buffers 'nil)) ; 現在のバッファを検索結果表示に使わない
+(when (locate-library "ag")
+  (autoload 'ag "ag" nil t)
+  (eval-after-load "ag"
+    '(progn
+       (custom-set-variables
+        '(ag-highlight-search t)  ; 検索結果の中の検索語をハイライトする
+        '(ag-reuse-window 'nil)   ; 現在のウィンドウを検索結果表示に使わない
+        '(ag-reuse-buffers 'nil)) ; 現在のバッファを検索結果表示に使わない
+        ))
 
   (define-key global-map (kbd "C-x C-@") 'ag)
 
-  (autoload 'wgrep-ag-setup "wgrep-ag" nil t)
-  (add-hook 'ag-mode-hook 'wgrep-ag-setup))
+  (when (locate-library "wgrep-ag")
+    (autoload 'wgrep-ag-setup "wgrep-ag" nil t)
+
+    (add-hook 'ag-mode-hook 'wgrep-ag-setup)))
 
 ;; anzu
 (when (require 'anzu nil t)
@@ -627,17 +635,10 @@
 
   (setq-default ac-sources
                 '(ac-source-filename
-                  ac-source-yasnippet
                   ac-source-dictionary
                   ac-source-words-in-same-mode-buffers))
 
-  (global-auto-complete-mode t)
-
-  ;; yasnippetのbindingを指定するとエラーが出るので回避
-  (setf (symbol-function 'yas-active-keys)
-        (lambda ()
-          (remove-duplicates
-           (mapcan #'yas--table-all-keys (yas--get-snippet-tables))))))
+  (global-auto-complete-mode t))
 
 ;; cua-mode
 (cua-mode t)
@@ -675,50 +676,62 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; yasnippet
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'yasnippet nil t)
-  (setq yas-snippet-dirs '("~/.emacs.d/snippets"))
-  (yas-global-mode t)
-
-  ;; キーバインド
-  (define-key yas-minor-mode-map (kbd "<tab>") nil)
-  (define-key yas-minor-mode-map (kbd "TAB") nil)
-  (define-key yas-minor-mode-map (kbd "C-o") 'yas-expand)
-  (define-key yas-minor-mode-map (kbd "C-x i i") 'yas-insert-snippet)
-  (define-key yas-minor-mode-map (kbd "C-x i n") 'yas-new-snippet)
-  (define-key yas-minor-mode-map (kbd "C-x i v") 'yas-visit-snippet-file)
-
-  ;; Helm連携
-  (eval-after-load "helm"
+(when (locate-library "yasnippet")
+  (autoload 'yas/minor-mode-on "yasnippet" nil t)
+  (eval-after-load "yasnippet"
     '(progn
-       (defun my-yas/prompt (prompt choices &optional display-fn)
-         (let* ((names (loop for choice in choices
-                             collect (or (and display-fn (funcall display-fn choice))
-                                         choice)))
-                (selected (helm-other-buffer
-                           `(((name . ,(format "%s" prompt))
-                              (candidates . names)
-                              (action . (("Insert snippet" . (lambda (arg) arg))))))
-                           "*helm yas/prompt*")))
-           (if selected
-               (let ((n (position selected names :test 'equal)))
-                 (nth n choices))
-             (signal 'quit "user quit!"))))
-       (custom-set-variables '(yas/prompt-functions '(my-yas/prompt))))))
+       (custom-set-variables '(yas-snippet-dirs '("~/.emacs.d/snippets")))
+
+       (define-key yas-minor-mode-map (kbd "<tab>") nil)
+       (define-key yas-minor-mode-map (kbd "TAB") nil)
+       (define-key yas-minor-mode-map (kbd "C-o") 'yas-expand)
+       (define-key yas-minor-mode-map (kbd "C-x i i") 'yas-insert-snippet)
+       (define-key yas-minor-mode-map (kbd "C-x i n") 'yas-new-snippet)
+       (define-key yas-minor-mode-map (kbd "C-x i v") 'yas-visit-snippet-file)
+
+       ;; auto-complete連携
+       (when (locate-library "auto-complete")
+         (add-to-list (make-local-variable 'ac-sources)
+                      'ac-source-yasnippet)
+
+         ;; yasnippetのbindingを指定するとエラーが出るので回避
+         (setf (symbol-function 'yas-active-keys)
+               (lambda ()
+                 (remove-duplicates
+                  (mapcan #'yas--table-all-keys (yas--get-snippet-tables))))))
+
+       ;; Helm連携
+       (when (locate-library "helm")
+         (defun my-yas/prompt (prompt choices &optional display-fn)
+           (let* ((names (loop for choice in choices
+                               collect (or (and display-fn (funcall display-fn choice))
+                                           choice)))
+                  (selected (helm-other-buffer
+                             `(((name . ,(format "%s" prompt))
+                                (candidates . names)
+                                (action . (("Insert snippet" . (lambda (arg) arg))))))
+                             "*helm yas/prompt*")))
+             (if selected
+                 (let ((n (position selected names :test 'equal)))
+                   (nth n choices))
+               (signal 'quit "user quit!"))))
+         (custom-set-variables '(yas/prompt-functions '(my-yas/prompt))))
+       )))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Flycheck
+;; flycheck
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'flycheck nil t)
-  (add-hook 'after-init-hook #'global-flycheck-mode)
+(when (locate-library "flycheck")
+  (autoload 'flycheck-mode "flycheck" nil t)
+  (eval-after-load "flycheck"
+    '(progn
+       (define-key flycheck-mode-map (kbd "M-n") 'flycheck-next-error)
+       (define-key flycheck-mode-map (kbd "M-p") 'flycheck-previous-error)
 
-  (define-key flycheck-mode-map (kbd "M-n") 'flycheck-next-error)
-  (define-key flycheck-mode-map (kbd "M-p") 'flycheck-previous-error)
-
-  (when (require 'flycheck-pos-tip nil t)
-    (eval-after-load 'flycheck
-      '(custom-set-variables
-        '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))))
+       (when (require 'flycheck-pos-tip nil t)
+         (custom-set-variables
+          '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -742,7 +755,7 @@
 ;; eldoc
 (when (locate-library "eldoc")
   (autoload 'eldoc-mode "eldoc" nil t)
-  (eval-after-load 'eldoc-mode
+  (eval-after-load "eldoc"
     '(progn
        (set (make-local-variable 'eldoc-idle-delay) 0.2)
        (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)))
@@ -757,11 +770,14 @@
            ac-source-variables
            ac-source-symbols
            ac-source-features
-           ac-source-yasnippet
            ac-source-dictionary
            ac-source-words-in-same-mode-buffers)))
 
   (add-hook 'emacs-lisp-mode-hook 'elisp-completion-hook))
+
+;; flycyeck
+(when (locate-library "flycheck")
+  (add-hook 'emacs-lisp-mode-hook 'flycheck-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -778,10 +794,13 @@
   (defun shell-completion-hook ()
     (set (make-local-variable 'ac-sources)
          '(ac-source-filename
-           ac-source-yasnippet
            ac-source-dictionary)))
 
   (add-hook 'sh-mode-hook 'shell-completion-hook))
+
+;; flycyeck
+(when (locate-library "flycheck")
+  (add-hook 'sh-mode-hook 'flycheck-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -809,9 +828,10 @@
 ;; c-eldoc
 (when (locate-library "c-eldoc")
   (autoload 'c-eldoc-mode "c-eldoc" nil t)
-  (eval-after-load 'c-eldoc-mode
+  (eval-after-load "c-eldoc"
     '(progn
        (set (make-local-variable 'c-eldoc-cpp-command) "/usr/bin/g++")
+       (set (make-local-variable 'c-eldoc-buffer-regenerate-time) 60)
        (set (make-local-variable 'eldoc-idle-delay) 0.2)
        (set (make-local-variable 'eldoc-echo-area-use-multiline-p) t)))
 
@@ -854,6 +874,10 @@
 
   (add-hook 'cperl-mode-hook 'perl-completion-hook))
 
+;; flycyeck
+(when (locate-library "flycheck")
+  (add-hook 'cperl-mode-hook 'flycheck-mode))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python
@@ -861,11 +885,19 @@
 ;; jedi
 (when (locate-library "jedi")
   (autoload 'jedi:setup "jedi" nil t)
-  (eval-after-load 'jedi:setup
+  (eval-after-load "jedi"
     '(progn
        (set (make-local-variable 'jedi:complete-on-dot) t)))
 
   (add-hook 'python-mode-hook 'jedi:setup))
+
+;; yasnippet
+(when (locate-library "yasnippet")
+  (add-hook 'python-mode-hook 'yas/minor-mode-on))
+
+;; flycyeck
+(when (locate-library "flycheck")
+  (add-hook 'python-mode-hook 'flycheck-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -891,7 +923,7 @@
 ;; ruby-block
 (when (locate-library "ruby-block")
   (autoload 'ruby-block-mode "ruby-block" nil t)
-  (eval-after-load 'ruby-block
+  (eval-after-load "ruby-block"
     '(progn
        (set (make-local-variable 'ruby-block-highlight-toggle) t)))
 
@@ -904,8 +936,17 @@
   (add-hook 'ruby-mode-hook 'inf-ruby-minor-mode))
 
 ;; robe
-(add-hook 'ruby-mode-hook 'robe-mode)
-(add-hook 'robe-mode-hook 'ac-robe-setup)
+(when (locate-library "robe")
+  (add-hook 'ruby-mode-hook 'robe-mode)
+  (add-hook 'robe-mode-hook 'ac-robe-setup))
+
+;; yasnippet
+(when (locate-library "yasnippet")
+  (add-hook 'ruby-mode-hook 'yas/minor-mode-on))
+
+;; flycyeck
+(when (locate-library "flycheck")
+  (add-hook 'ruby-mode-hook 'flycheck-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -934,7 +975,11 @@
         (add-to-list (make-local-variable 'ac-sources)
                      'ac-source-php-completion)))
 
-    (add-hook 'php-mode-hook 'php-completion-hook)))
+    (add-hook 'php-mode-hook 'php-completion-hook))
+
+  ;; flycyeck
+  (when (locate-library "flycheck")
+    (add-hook 'ruby-mode-hook 'flycheck-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -957,8 +1002,9 @@
   (when (locate-library "auto-complete")
     (add-hook 'web-mode-hook 'auto-complete-mode))
 
-  (when (locate-library "auto-highlight-symbol")
-    (add-hook 'web-mode-hook 'auto-highlight-symbol-mode)))
+  ;; yasnippet
+  (when (locate-library "yasnippet")
+    (add-hook 'web-mode-hook 'yas/minor-mode-on)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1037,55 +1083,69 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Git
+;; VCS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (setq vc-handled-backends '())
 (eval-after-load "vc"
   '(remove-hook 'find-file-hooks 'vc-find-file-hook))
 
 ;; magit
-(when (require 'magit nil t)
-  (define-key global-map (kbd "C-x m") 'magit-status)
-  (setq magit-auto-revert-mode nil)
-  (setq magit-last-seen-setup-instructions "1.4.0"))
+(when (locate-library "magit")
+  (autoload 'magit-status "magit" nil t)
+  (eval-after-load "magit"
+    '(progn
+       (setq magit-auto-revert-mode nil)
+       (setq magit-last-seen-setup-instructions "1.4.0")))
+
+  (define-key global-map (kbd "C-x g s") 'magit-status))
 
 ;; helm-ls-git
-(when (require 'helm-ls-git nil t)
+(when (locate-library "helm-ls-git")
+  (autoload 'helm-ls-git-ls "helm-ls-git" nil t)
+
   (define-key global-map (kbd "C-x C-g") 'helm-ls-git-ls))
 
-;; git-gutter
-(when (require 'git-gutter nil t)
-  (global-git-gutter-mode t)
-  (git-gutter:linum-setup))
+;; git-gutter-fringe+
+(when (locate-library "git-gutter-fringe+")
+  (autoload 'global-git-gutter+-mode "git-gutter-fringe+" nil t)
+  (eval-after-load "git-gutter-fringe+"
+    '(progn
+       (define-key git-gutter+-mode-map (kbd "C-x v p") 'git-gutter+-previous-hunk)
+       (define-key git-gutter+-mode-map (kbd "C-x v n") 'git-gutter+-next-hunk)
+       (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
+       (define-key git-gutter+-mode-map (kbd "C-x v r") 'git-gutter+-revert-hunks)
+       (define-key git-gutter+-mode-map (kbd "C-x v s") 'git-gutter+-stage-hunks)))
 
+  (define-key global-map (kbd "C-x g g") 'global-git-gutter+-mode))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Subversion
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; dsvn
 (when (locate-library "dsvn")
   (autoload 'svn-status "dsvn" nil t)
-  (autoload 'svn-update "dsvn" nil t))
+  (autoload 'svn-update "dsvn" nil t)
+
+  (define-key global-map (kbd "C-x s s") 'svn-status)
+  (define-key global-map (kbd "C-x s u") 'svn-update))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; シェルの利用
+;; multi-term
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; multi-termの設定
-(when (require 'multi-term nil t)
-  ;; 使用するシェルを指定
-  (when (eq system-type 'darwin)
-    (setq multi-term-program "/usr/local/bin/zsh")
-    (setenv "TERMINFO" "~/.terminfo"))
+(when (locate-library "multi-term")
+  (autoload 'multi-term "multi-term" nil t)
+  (eval-after-load "multi-term"
+    '(progn
+       (when (eq system-type 'darwin)
+         (setq multi-term-program "/usr/local/bin/zsh")
+         (setenv "TERMINFO" "~/.terminfo"))
 
-  (when (eq system-type 'gnu/linux)
-    (setq multi-term-program "/bin/bash"))
+       (when (eq system-type 'gnu/linux)
+         (setq multi-term-program "/bin/bash"))))
 
   (define-key global-map (kbd "C-M-m") 'multi-term)
 
   (add-hook 'term-mode-hook
             '(lambda ()
-               (setq show-trailing-whitespace nil)
+               (set (make-local-variable 'show-trailing-whitespace) nil)
                (define-key term-raw-map (kbd "C-y") 'term-paste)
                (define-key term-raw-map (kbd "C-t")
                  (lookup-key (current-global-map) (kbd "C-t"))))))
