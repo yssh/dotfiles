@@ -1119,8 +1119,8 @@
   (autoload 'svn-status "dsvn" nil t)
   (autoload 'svn-update "dsvn" nil t)
 
-  (define-key global-map (kbd "C-x s s") 'svn-status)
-  (define-key global-map (kbd "C-x s u") 'svn-update))
+  (define-key global-map (kbd "C-x n s") 'svn-status)
+  (define-key global-map (kbd "C-x n u") 'svn-update))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
