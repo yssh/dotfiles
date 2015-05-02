@@ -638,7 +638,7 @@
                   ac-source-dictionary
                   ac-source-words-in-same-mode-buffers))
 
-  (define-key ac-mode-map (kbd "C-i") 'auto-complete)
+  (define-key ac-mode-map (kbd "C-j") 'auto-complete)
 
   (global-auto-complete-mode t))
 
