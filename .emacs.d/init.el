@@ -107,7 +107,7 @@
 ;; 環境変数の設定
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; パスの設定
-(when (eq window-system 'ns)
+(when (and (eq window-system 'ns) (locate-library "exec-path-from-shell"))
   (exec-path-from-shell-initialize))
 
 ;; 文字コードを指定する
@@ -194,16 +194,8 @@
    nil 'japanese-jisx0208
    (font-spec :family "Hiragino Kaku Gothic ProN")))
 
-;; (when (eq window-system 'x)
-;;   (add-to-list 'default-frame-alist '(font . "ricty-12")))
-
 (when (eq window-system 'x)
-  (set-face-attribute 'default nil
-                      :family "Ricty"
-                      :height 120)
-  (set-fontset-font
-   nil 'japanese-jisx0208
-   (font-spec :family "Ricty")))
+  (add-to-list 'default-frame-alist '(font . "ricty-12")))
 
 ;; ウインドウの透明度設定
 (when (eq window-system 'ns)
