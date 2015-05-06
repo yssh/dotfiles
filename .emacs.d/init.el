@@ -591,6 +591,7 @@
   (define-key elscreen-map (kbd "C-<right>") 'elscreen-swap-next)
   (define-key elscreen-map (kbd "C-<left>") 'elscreen-swap-previous)
   (define-key elscreen-map (kbd "C-k") 'kill-buffer-for-elscreen)
+  (define-key global-map (kbd "C-x k") 'kill-buffer-for-elscreen)
 
   ;; elscreen-separate-buffer-list
   (when (require 'elscreen-separate-buffer-list nil t)
@@ -730,14 +731,30 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ctags
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (require 'ctags nil t)
+(when (require 'ctags-update nil t)
   (when (eq system-type 'darwin)
-    (setq ctags-command "/usr/local/bin/ctags -Re"))
+    (setq ctags-update-command "/usr/local/bin/ctags"))
 
   (when (eq system-type 'gnu/linux)
-    (setq ctags-command "/usr/bin/ctags -Re"))
+    (setq ctags-update-command "/usr/bin/ctags"))
 
-  (define-key global-map (kbd "<f5>") 'ctags-create-or-update-tags-table)
+  (defun ctags ()
+    (call-process-shell-command (concat ctags-update-command " -e -R") nil "*Ctags*"))
+
+  (defun ctags-create ()
+    (interactive)
+    (let* ((current-directory default-directory)
+           (top-directory (read-directory-name
+                           "Top of source tree: " default-directory))
+           (file-name (concat (file-name-as-directory top-directory) "TAGS")))
+      (cd top-directory)
+      (if (not (= 0 (ctags)))
+          (message "Error creating %s!" file-name)
+        (message "Table %s created and configured." file-name))
+      (cd current-directory)))
+
+  (define-key global-map (kbd "M-<f5>") 'ctags-create)
+  (define-key global-map (kbd "<f5>") 'ctags-update)
   (define-key global-map (kbd "C-x C-t") 'helm-etags-select)
   (define-key global-map (kbd "C-x C-y") 'pop-tag-mark))
 
