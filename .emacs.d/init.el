@@ -1000,6 +1000,11 @@
   (defun my-web-mode-hook ()
     (set-face-attribute 'web-mode-symbol-face nil :foreground "#FF7400")
 
+    (when (locate-library "auto-complete")
+      (setq ac-sources
+            '(ac-source-dictionary
+              ac-source-words-in-same-mode-buffers)))
+
     (set (make-local-variable 'web-mode-markup-indent-offset) 2)
     (set (make-local-variable 'web-mode-css-indent-offset) 2)
     (set (make-local-variable 'web-mode-code-indent-offset) 2))
