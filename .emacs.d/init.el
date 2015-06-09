@@ -962,7 +962,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (when (locate-library "php-mode")
   (autoload 'php-mode "php-mode" nil t)
-  (add-to-list 'auto-mode-alist '("\\.ctp\\'" . php-mode))
+  (add-to-list 'auto-mode-alist '("\\.ctp$" . php-mode))
 
   (defun my-php-mode-hook ()
     (set (make-local-variable 'c-basic-offset) 4)
@@ -1083,13 +1083,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (when (locate-library "yaml-mode")
   (autoload 'yaml-mode "yaml-mode" nil t)
-  (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode)))
+  (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode))
+
+  (when (locate-library "auto-complete")
+    (add-to-list 'ac-modes 'yaml-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Makefile
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (add-to-list 'auto-mode-alist '("Makefile\\..*$" . makefile-gmake-mode))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Markdown
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (locate-library "markdown-mode")
+  (autoload 'markdown-mode "markdown-mode" nil t)
+  (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
+  (add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
