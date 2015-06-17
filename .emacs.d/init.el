@@ -605,7 +605,6 @@
   (push '("*Moccur*") popwin:special-display-config)
   (push '("*All*") popwin:special-display-config)
   (push '("*Compile-Log*") popwin:special-display-config)
-  (push '("\\*Helm " :regexp t) popwin:special-display-config)
   (push '("\\*ag " :regexp t) popwin:special-display-config)
   (push '("\\*magit " :regexp t) popwin:special-display-config)
   (push '(direx:direx-mode :position left :width 30 :dedicated t)
