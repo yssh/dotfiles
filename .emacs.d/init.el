@@ -610,6 +610,8 @@
   (push '(direx:direx-mode :position left :width 30 :dedicated t)
         popwin:special-display-config)
   (push '(" *undo-tree*" :width 0.3 :position right) popwin:special-display-config)
+  (push '("*Google Translate*") popwin:special-display-config)
+  (push '("*Codic Result*") popwin:special-display-config)
   (define-key global-map (kbd "C-x p") 'popwin:display-last-buffer))
 
 
@@ -1170,6 +1172,35 @@
                (define-key term-raw-map (kbd "C-y") 'term-paste)
                (define-key term-raw-map (kbd "C-t")
                  (lookup-key (current-global-map) (kbd "C-t"))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; google-translate
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (locate-library "google-translate")
+  (autoload 'google-translate-at-point "google-translate" nil t)
+  (eval-after-load "google-translate"
+    '(progn
+       (custom-set-variables
+        '(google-translate-default-source-language "ja")
+        '(google-translate-default-target-language "en"))))
+
+  (define-key global-map (kbd "C-x t") 'google-translate-at-point)
+  (define-key global-map (kbd "C-x T") 'google-translate-query-translate))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; search-web
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (locate-library "search-web")
+  (autoload 'search-web "search-web" nil t))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; codic
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (locate-library "codic")
+  (autoload 'codic "codic" nil t))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
