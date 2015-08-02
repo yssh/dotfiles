@@ -85,8 +85,10 @@
 
 ;; 削除
 (define-key global-map (kbd "C-h") 'delete-backward-char)
+
 ;; ヘルプ
 (define-key global-map (kbd "M-?") 'help-for-help)
+
 ;; 最小化を無効
 (define-key global-map (kbd "C-z") nil)
 
@@ -185,14 +187,11 @@
 
 ;; フォントの設定
 (when (eq window-system 'ns)
-  ;; asciiフォントをRictyに
   (set-face-attribute 'default nil
                       :family "Ricty"
                       :height 160)
-  ;; 日本語フォントをヒラギノ角ゴシックProNに
-  (set-fontset-font
-   nil 'japanese-jisx0208
-   (font-spec :family "Hiragino Kaku Gothic ProN")))
+  (set-fontset-font nil 'japanese-jisx0208
+                    (font-spec :family "Hiragino Kaku Gothic ProN")))
 
 (when (eq window-system 'x)
   (add-to-list 'default-frame-alist '(font . "ricty-12")))
@@ -761,6 +760,20 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; fold/show
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (locate-library "fold-dwim")
+  (autoload 'hs-minor-mode "fold-dwim" nil t)
+
+  (define-key global-map (kbd "<f7>") 'fold-dwim-toggle)
+  (define-key global-map (kbd "<M-f7>") 'fold-dwim-hide-all)
+  (define-key global-map (kbd "<C-M-f7>") 'fold-dwim-show-all))
+
+(when (locate-library "hide-comnt")
+  (autoload 'hide/show-comments-toggle "hide-comnt") nil t)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Emacs-Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; eldoc
@@ -789,6 +802,10 @@
 ;; flycyeck
 (when (locate-library "flycheck")
   (add-hook 'emacs-lisp-mode-hook 'flycheck-mode))
+
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'emacs-lisp-mode-hook 'hs-minor-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -856,6 +873,11 @@
 
   (add-hook 'c++-mode-hook 'cpp-completion-hook))
 
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'c-mode-hook 'hs-minor-mode)
+  (add-hook 'c++-mode-hook 'hs-minor-mode))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Perl
@@ -887,6 +909,10 @@
 (when (locate-library "flycheck")
   (add-hook 'cperl-mode-hook 'flycheck-mode))
 
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'cperl-mode-hook 'hs-minor-mode))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Python
@@ -907,6 +933,10 @@
 ;; flycyeck
 (when (locate-library "flycheck")
   (add-hook 'python-mode-hook 'flycheck-mode))
+
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'python-mode-hook 'hs-minor-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -957,6 +987,21 @@
 (when (locate-library "flycheck")
   (add-hook 'ruby-mode-hook 'flycheck-mode))
 
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'ruby-mode-hook 'hs-minor-mode))
+
+(let ((ruby-mode-hs-info
+       '( ruby-mode
+          "class\\|module\\|\\|describe\\|context\\|def\\|if\\|unless\\|case\\|while\\|until\\|for\\|begin\\|do"
+          "end"
+          "#"
+          ruby-move-to-block
+          nil)))
+  (if (not (member ruby-mode-hs-info hs-special-modes-alist))
+      (setq hs-special-modes-alist
+            (cons ruby-mode-hs-info hs-special-modes-alist))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PHP
@@ -987,7 +1032,11 @@
 
   ;; flycyeck
   (when (locate-library "flycheck")
-    (add-hook 'ruby-mode-hook 'flycheck-mode)))
+    (add-hook 'php-mode-hook 'flycheck-mode))
+
+  ;; fold-dwim
+  (when (locate-library "fold-dwim")
+    (add-hook 'php-mode-hook 'hs-minor-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1014,7 +1063,11 @@
 
   ;; yasnippet
   (when (locate-library "yasnippet")
-    (add-hook 'web-mode-hook 'yas/minor-mode-on)))
+    (add-hook 'web-mode-hook 'yas/minor-mode-on))
+
+  ;; fold-dwim
+  (when (locate-library "fold-dwim")
+  (add-hook 'web-mode-hook 'hs-minor-mode)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1025,6 +1078,14 @@
   (set (make-local-variable 'js-expr-indent-offset) 2))
 
 (add-hook 'js-mode-hook 'my-js-mode-hook)
+
+;; flycyeck
+(when (locate-library "flycheck")
+  (add-hook 'js-mode-hook 'flycheck-mode))
+
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'js-mode-hook 'hs-minor-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1057,6 +1118,10 @@
     (add-to-list 'ac-sources 'ac-source-css-property t)))
 
 (add-hook 'css-mode-hook 'my-css-mode-hook)
+
+;; fold-dwim
+(when (locate-library "fold-dwim")
+  (add-hook 'css-mode-hook 'hs-minor-mode))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
