@@ -8,7 +8,7 @@
 # Variables
 case ${OSTYPE} in
     darwin*)
-        export PATH=/usr/local/bin:$PATH
+        export PATH=/usr/local/bin:/sbin:/usr/sbin:$PATH
         export MANPATH=/usr/local/share/man:$MANPATH
         ;;
     linux*)
