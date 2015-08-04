@@ -660,12 +660,17 @@
 (when (require 'multiple-cursors nil t)
   (define-key global-map (kbd "C-<") 'mc/mark-previous-like-this)
   (define-key global-map (kbd "C->") 'mc/mark-next-like-this)
+  (define-key global-map (kbd "C-;") 'mc/mark-all-dwim)
 
   (when (locate-library "region-bindings-mode")
-    (define-key region-bindings-mode-map (kbd "C-a") 'mc/mark-all-like-this)
+    (define-key region-bindings-mode-map (kbd "C-a") 'mc/mark-all-like-this-dwim)
     (define-key region-bindings-mode-map (kbd "C-p") 'mc/mark-previous-like-this)
     (define-key region-bindings-mode-map (kbd "C-n") 'mc/mark-next-like-this)
-    (define-key region-bindings-mode-map (kbd "C-m") 'mc/mark-more-like-this-extended)))
+    (define-key region-bindings-mode-map (kbd "C-<tab>") 'mc/cycle-forward)
+    (define-key region-bindings-mode-map (kbd "C-S-<tab>") 'mc/cycle-backward)
+
+    (when (require 'mc-extras nil t)
+      (define-key region-bindings-mode-map (kbd "C-u") 'mc/remove-current-cursor))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
