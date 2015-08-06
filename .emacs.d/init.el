@@ -220,7 +220,7 @@
 (setq show-paren-delay 0)
 (setq show-paren-style 'expression)
 (set-face-background 'show-paren-match-face nil)
-(set-face-underline-p 'show-paren-match-face "red")
+(set-face-underline 'show-paren-match-face "red")
 
 ;; 行末の空白を表示
 (setq-default show-trailing-whitespace t)
@@ -725,12 +725,17 @@
   (autoload 'flycheck-mode "flycheck" nil t)
   (eval-after-load "flycheck"
     '(progn
-       (define-key flycheck-mode-map (kbd "M-n") 'flycheck-next-error)
-       (define-key flycheck-mode-map (kbd "M-p") 'flycheck-previous-error)
+       (define-key flycheck-mode-map (kbd "C-c C-n") 'flycheck-next-error)
+       (define-key flycheck-mode-map (kbd "C-c C-p") 'flycheck-previous-error)
 
        (when (require 'flycheck-pos-tip nil t)
          (custom-set-variables
           '(flycheck-display-errors-function #'flycheck-pos-tip-error-messages))))))
+
+(when (locate-library "helm-flycheck")
+  (eval-after-load "flycheck"
+    '(progn
+       (define-key flycheck-mode-map (kbd "C-c C-c") 'helm-flycheck))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
