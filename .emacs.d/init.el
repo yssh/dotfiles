@@ -44,8 +44,8 @@
 ;; package.el
 (when (require 'package nil t)
   ;; パッケージリポジトリにmeplaとmarmaladeを追加
-  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
-  (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+  (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
   ;; インストールしたパッケージにロードパスを通して読み込む
   (package-initialize))
 
@@ -256,6 +256,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; スクロールの設定
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; スクロールバーを消去
+(when (eq window-system 'ns)
+  (scroll-bar-mode -1))
+
 ;; スクロールを1行毎に
 (setq scroll-conservatively 35
       scroll-margin 0
@@ -309,6 +313,7 @@
   ;; キーバインド
   (define-key global-map (kbd "M-x")     'helm-M-x)
   (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
+  (define-key global-map (kbd "C-x C-f") 'helm-find-files)
   (define-key global-map (kbd "C-x C-b") 'helm-buffers-list)
   (define-key global-map (kbd "C-x C-i") 'helm-imenu)
   (define-key global-map (kbd "C-x C-u") 'helm-recentf)
