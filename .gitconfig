@@ -1,0 +1,8 @@
+[user]
+	name = yssh
+	email = yssh@example.com
+[alias]
+	st = status
+	co = checkout
+	br = branch
+	ci = commit
